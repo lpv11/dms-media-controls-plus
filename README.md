@@ -6,7 +6,7 @@ Media controls with a full-bar volume scroll overlay for Dank Material Shell. Di
 - Media controls widget layout
 - Scroll anywhere on the bar to change volume (optional)
 
-## Settings showcase
+## Settings screenshot
 
 https://github.com/lpv11/dms-media-controls-plus/blob/main/screenshot.png
 
