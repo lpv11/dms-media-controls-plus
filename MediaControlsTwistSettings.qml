@@ -33,7 +33,7 @@ PluginSettings {
     ToggleSetting {
         settingKey: "fullOverlay"
         label: "Full Bar Overlay"
-        description: "Capture scroll across the entire bar area. Disables workspace scroll"
+        description: "Capture scroll across the entire bar area. Disables workspace scroll."
         defaultValue: true
     }
 
