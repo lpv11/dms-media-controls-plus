@@ -1,0 +1,15 @@
+{
+    "id": "mediaControlsPlus",
+    "name": "Media Controls Plus",
+    "description": "Full-bar volume scroll overlay. Ah and media controls.",
+    "version": "1.0.0",
+    "license": "MIT",
+    "author": "lpv11",
+    "icon": "volume_up",
+    "component": "./MediaControlsTwist.qml",
+    "settings": "./MediaControlsTwistSettings.qml",
+    "permissions": [
+        "settings_read",
+        "settings_write"
+    ]
+}
