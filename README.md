@@ -8,7 +8,7 @@ Media controls with a full-bar volume scroll overlay for Dank Material Shell. Di
 
 ## Settings screenshot
 
-https://github.com/lpv11/dms-media-controls-plus/blob/main/screenshot.png?raw=true
+![Alt text](https://github.com/lpv11/dms-media-controls-plus/blob/main/screenshot.png?raw=true "")
 
 ## License
 MIT
