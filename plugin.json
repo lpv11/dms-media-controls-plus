@@ -1,7 +1,7 @@
 {
     "id": "mediaControlsPlus",
     "name": "Media Controls Plus",
-    "description": "Full-bar volume scroll overlay. Ah and media controls.",
+    "description": "Media controls with full bar volume scroll. Disables workspace scroll.",
     "version": "1.0.0",
     "license": "MIT",
     "author": "lpv11",
