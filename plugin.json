@@ -6,8 +6,8 @@
     "license": "MIT",
     "author": "lpv11",
     "icon": "volume_up",
-    "component": "./MediaControlsTwist.qml",
-    "settings": "./MediaControlsTwistSettings.qml",
+    "component": "./MediaControlsPlus.qml",
+    "settings": "./MediaControlsTwistPlus.qml",
     "permissions": [
         "settings_read",
         "settings_write"
