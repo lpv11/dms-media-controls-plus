@@ -7,7 +7,7 @@
     "author": "lpv11",
     "icon": "volume_up",
     "component": "./MediaControlsPlus.qml",
-    "settings": "./MediaControlsTwistPlus.qml",
+    "settings": "./MediaControlsPlusSettings.qml",
     "permissions": [
         "settings_read",
         "settings_write"
