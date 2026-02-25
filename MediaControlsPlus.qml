@@ -20,6 +20,7 @@ PluginComponent {
 
     property bool fullOverlay: pluginData.fullOverlay !== false
     property bool hideWhenNoMusic: pluginData.hideWhenNoMusic !== false
+    pillClickAction: () => { playerctl(["play-pause"]); }
 
     function applyForcedNoBackground() {
         if (!barConfig) {
@@ -44,6 +45,26 @@ PluginComponent {
             return
         const cmd = deltaY > 0 ? "increment" : "decrement"
         Quickshell.execDetached(["dms", "ipc", "call", "audio", cmd, step.toString()])
+    }
+
+    function playerctl(args) {
+        if (!args || args.length === 0)
+            return
+        Quickshell.execDetached(["/usr/bin/playerctl"].concat(args))
+    }
+
+    function toggleMute() {
+        Quickshell.execDetached(["dms", "ipc", "call", "audio", "mute"])
+    }
+
+    function handleMediaAction(button) {
+        if (button === Qt.LeftButton) {
+            playerctl(["play-pause"]);
+        } else if (button === Qt.MiddleButton) {
+            playerctl(["previous"]);
+        } else if (button === Qt.RightButton) {
+            playerctl(["next"]);
+        }
     }
 
     Component {
@@ -89,6 +110,8 @@ PluginComponent {
 
             implicitWidth: playerAvailable ? currentContentWidth : 0
             implicitHeight: playerAvailable ? currentContentHeight : 0
+            width: implicitWidth
+            height: implicitHeight
             opacity: playerAvailable ? 1 : 0
 
             Behavior on opacity {
@@ -135,6 +158,7 @@ PluginComponent {
                         color: Theme.primary
                         visible: !CavaService.cavaAvailable || !SettingsData.audioVisualizerEnabled
                     }
+
                 }
 
                 Rectangle {
@@ -158,16 +182,9 @@ PluginComponent {
                         enabled: playerAvailable
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-                        onClicked: mouse => {
-                            if (!activePlayer)
-                                return;
-                            if (mouse.button === Qt.LeftButton) {
-                                activePlayer.togglePlaying();
-                            } else if (mouse.button === Qt.MiddleButton) {
-                                activePlayer.previous();
-                            } else if (mouse.button === Qt.RightButton) {
-                                activePlayer.next();
-                            }
+                        onPressed: mouse => {
+                            root.handleMediaAction(mouse.button);
+                            mouse.accepted = true;
                         }
                     }
                 }
@@ -200,6 +217,7 @@ PluginComponent {
                             color: Theme.primary
                             visible: !CavaService.cavaAvailable || !SettingsData.audioVisualizerEnabled
                         }
+
                     }
 
                     Rectangle {
@@ -209,10 +227,7 @@ PluginComponent {
                         readonly property bool isWebMedia: lowerIdentity.includes("firefox") || lowerIdentity.includes("chrome") || lowerIdentity.includes("chromium") || lowerIdentity.includes("edge") || lowerIdentity.includes("safari")
 
                         property string displayText: {
-                            if (!activePlayer || !activePlayer.trackTitle) {
-                                return "";
-                            }
-
+                            if (!activePlayer || !activePlayer.trackTitle) return "";
                             const title = isWebMedia ? activePlayer.trackTitle : (activePlayer.trackTitle || "Unknown Track");
                             const subtitle = isWebMedia ? (activePlayer.trackArtist || cachedIdentity) : (activePlayer.trackArtist || "");
                             return subtitle.length > 0 ? title + " • " + subtitle : title;
@@ -246,9 +261,7 @@ PluginComponent {
                                 running: mediaText.needsScrolling && textContainer.visible
                                 loops: Animation.Infinite
 
-                                PauseAnimation {
-                                    duration: 2000
-                                }
+                                PauseAnimation { duration: 2000 }
 
                                 NumberAnimation {
                                     target: mediaText
@@ -259,9 +272,7 @@ PluginComponent {
                                     easing.type: Easing.Linear
                                 }
 
-                                PauseAnimation {
-                                    duration: 2000
-                                }
+                                PauseAnimation { duration: 2000 }
 
                                 NumberAnimation {
                                     target: mediaText
@@ -270,6 +281,17 @@ PluginComponent {
                                     duration: Math.max(1000, (mediaText.implicitWidth - textContainer.width + 5) * 60)
                                     easing.type: Easing.Linear
                                 }
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            enabled: playerAvailable
+                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                            onPressed: mouse => {
+                                root.handleMediaAction(mouse.button);
+                                mouse.accepted = true;
                             }
                         }
                     }
@@ -300,10 +322,8 @@ PluginComponent {
                             anchors.fill: parent
                             enabled: playerAvailable
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (activePlayer) {
-                                    activePlayer.previous();
-                                }
+                            onPressed: {
+                                root.playerctl(["previous"]);
                             }
                         }
                     }
@@ -328,10 +348,10 @@ PluginComponent {
                             anchors.fill: parent
                             enabled: playerAvailable
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (activePlayer) {
-                                    activePlayer.togglePlaying();
-                                }
+                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                            onPressed: mouse => {
+                                root.handleMediaAction(mouse.button);
+                                mouse.accepted = true;
                             }
                         }
                     }
@@ -357,10 +377,8 @@ PluginComponent {
                             anchors.fill: parent
                             enabled: playerAvailable
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (activePlayer) {
-                                    activePlayer.next();
-                                }
+                            onPressed: {
+                                root.playerctl(["next"]);
                             }
                         }
                     }
@@ -377,6 +395,17 @@ PluginComponent {
             width: root.fullOverlay && root.parentScreen ? root.parentScreen.width : implicitWidth
             height: root.fullOverlay ? root.barThickness : implicitHeight
             z: root.fullOverlay ? 1000 : 0
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: root.fullOverlay
+                cursorShape: Qt.PointingHandCursor
+                acceptedButtons: Qt.MiddleButton
+                onPressed: mouse => {
+                    root.toggleMute();
+                    mouse.accepted = true;
+                }
+            }
 
             Loader {
                 id: mediaLoader
@@ -403,6 +432,17 @@ PluginComponent {
             width: root.fullOverlay ? root.barThickness : implicitWidth
             height: root.fullOverlay && root.parentScreen ? root.parentScreen.height : implicitHeight
             z: root.fullOverlay ? 1000 : 0
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: root.fullOverlay
+                cursorShape: Qt.PointingHandCursor
+                acceptedButtons: Qt.MiddleButton
+                onPressed: mouse => {
+                    root.toggleMute();
+                    mouse.accepted = true;
+                }
+            }
 
             Loader {
                 id: mediaLoader

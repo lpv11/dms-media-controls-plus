@@ -9,7 +9,7 @@ PluginSettings {
 
     StyledText {
         width: parent.width
-        text: "Media Controls Plus"
+        text: "Settings"
         font.pixelSize: Theme.fontSizeLarge
         font.weight: Font.Bold
         color: Theme.surfaceText
@@ -17,7 +17,7 @@ PluginSettings {
 
     StyledText {
         width: parent.width
-        text: "Full-bar volume scroll overlay. Ah and media controls."
+        text: "Adjust full bar overlay settings."
         font.pixelSize: Theme.fontSizeSmall
         color: Theme.surfaceVariantText
         wrapMode: Text.WordWrap
