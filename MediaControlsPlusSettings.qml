@@ -31,10 +31,34 @@ PluginSettings {
     }
 
     ToggleSetting {
+        id: fullOverlayToggle
         settingKey: "fullOverlay"
         label: "Full Bar Overlay"
-        description: "Capture scroll across the entire bar area. Disables workspace scroll."
+        description: "Capture scroll across the entire bar area. When enabled, Allow Workspace Scroll is disabled."
         defaultValue: true
+        onValueChanged: {
+            if (value && allowWorkspaceScrollToggle.value)
+                allowWorkspaceScrollToggle.value = false
+        }
+    }
+
+    ToggleSetting {
+        settingKey: "showMediaControls"
+        label: "Show Media Controls"
+        description: "Enabled: show media controls widget. Disabled: hide widget and keep only volume overlay behavior."
+        defaultValue: true
+    }
+
+    ToggleSetting {
+        id: allowWorkspaceScrollToggle
+        settingKey: "allowWorkspaceScroll"
+        label: "Allow Workspace Scroll"
+        description: "Use default DankBar wheel behavior (workspace scroll) instead of volume scrolling. When enabled, Full Bar Overlay is disabled."
+        defaultValue: false
+        onValueChanged: {
+            if (value && fullOverlayToggle.value)
+                fullOverlayToggle.value = false
+        }
     }
 
     Rectangle {

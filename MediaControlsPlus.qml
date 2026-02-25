@@ -21,7 +21,23 @@ PluginComponent {
     property bool fullOverlay: pluginData.fullOverlay !== false
     property bool hideWhenNoMusic: pluginData.hideWhenNoMusic !== false
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
-    pillClickAction: () => { playerctl(["play-pause"]); }
+    property bool showMediaControls: pluginData.showMediaControls !== false
+    property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
+    property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
+    pillClickAction: showMediaControls ? (() => {
+        playerctl(["play-pause"]);
+    }) : null
+
+    // Keep settings mutually exclusive in storage so toggles reflect reality.
+    onAllowWorkspaceScrollChanged: {
+        if (allowWorkspaceScroll && fullOverlay)
+            pluginData.fullOverlay = false
+    }
+
+    onFullOverlayChanged: {
+        if (fullOverlay && allowWorkspaceScroll)
+            pluginData.allowWorkspaceScroll = false
+    }
 
     function applyForcedNoBackground() {
         if (!barConfig) {
@@ -152,11 +168,11 @@ PluginComponent {
                 return audioVizHeight + Theme.spacingXS + playButtonHeight;
             }
 
-            implicitWidth: playerAvailable ? currentContentWidth : 0
-            implicitHeight: playerAvailable ? currentContentHeight : 0
+            implicitWidth: (playerAvailable && root.showMediaControls) ? currentContentWidth : 0
+            implicitHeight: (playerAvailable && root.showMediaControls) ? currentContentHeight : 0
             width: implicitWidth
             height: implicitHeight
-            opacity: playerAvailable ? 1 : 0
+            opacity: (playerAvailable && root.showMediaControls) ? 1 : 0
 
             Behavior on opacity {
                 NumberAnimation {
@@ -434,15 +450,15 @@ PluginComponent {
     horizontalBarPill: Component {
         Item {
             id: overlay
-            implicitWidth: mediaLoader.item ? mediaLoader.item.implicitWidth : Theme.iconSize
-            implicitHeight: mediaLoader.item ? mediaLoader.item.implicitHeight : Theme.iconSize
-            width: root.fullOverlay && root.parentScreen ? root.parentScreen.width : implicitWidth
-            height: root.fullOverlay ? root.barThickness : implicitHeight
-            z: root.fullOverlay ? 1000 : 0
+            implicitWidth: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitWidth : Theme.iconSize)
+            implicitHeight: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitHeight : Theme.iconSize)
+            width: root.overlayEnabled && root.parentScreen ? root.parentScreen.width : implicitWidth
+            height: root.overlayEnabled ? root.barThickness : implicitHeight
+            z: root.overlayEnabled ? 1000 : 0
 
             MouseArea {
                 anchors.fill: parent
-                enabled: root.fullOverlay
+                enabled: root.overlayEnabled
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.MiddleButton
                 onPressed: mouse => {
@@ -455,11 +471,17 @@ PluginComponent {
                 id: mediaLoader
                 anchors.centerIn: parent
                 sourceComponent: mediaContentComponent
+                active: root.showMediaControls
+                visible: root.showMediaControls
             }
 
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
+                    if (root.allowWorkspaceScroll) {
+                        event.accepted = false
+                        return
+                    }
                     if (event.angleDelta.y === 0)
                         return
                     root.bump(event.angleDelta.y)
@@ -471,15 +493,15 @@ PluginComponent {
 
     verticalBarPill: Component {
         Item {
-            implicitWidth: mediaLoader.item ? mediaLoader.item.implicitWidth : Theme.iconSize
-            implicitHeight: mediaLoader.item ? mediaLoader.item.implicitHeight : Theme.iconSize
-            width: root.fullOverlay ? root.barThickness : implicitWidth
-            height: root.fullOverlay && root.parentScreen ? root.parentScreen.height : implicitHeight
-            z: root.fullOverlay ? 1000 : 0
+            implicitWidth: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitWidth : Theme.iconSize)
+            implicitHeight: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitHeight : Theme.iconSize)
+            width: root.overlayEnabled ? root.barThickness : implicitWidth
+            height: root.overlayEnabled && root.parentScreen ? root.parentScreen.height : implicitHeight
+            z: root.overlayEnabled ? 1000 : 0
 
             MouseArea {
                 anchors.fill: parent
-                enabled: root.fullOverlay
+                enabled: root.overlayEnabled
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.MiddleButton
                 onPressed: mouse => {
@@ -492,11 +514,17 @@ PluginComponent {
                 id: mediaLoader
                 anchors.centerIn: parent
                 sourceComponent: mediaContentComponent
+                active: root.showMediaControls
+                visible: root.showMediaControls
             }
 
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
+                    if (root.allowWorkspaceScroll) {
+                        event.accepted = false
+                        return
+                    }
                     if (event.angleDelta.y === 0)
                         return
                     root.bump(event.angleDelta.y)
