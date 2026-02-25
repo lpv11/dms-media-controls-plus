@@ -51,4 +51,11 @@ PluginSettings {
         placeholder: "5"
         defaultValue: "5"
     }
+
+    ToggleSetting {
+        settingKey: "showOsdAtLimits"
+        label: "Show Volume OSD At Limits"
+        description: "Show volume OSD when scrolling down at 0% or scrolling up at max volume."
+        defaultValue: true
+    }
 }

@@ -20,6 +20,7 @@ PluginComponent {
 
     property bool fullOverlay: pluginData.fullOverlay !== false
     property bool hideWhenNoMusic: pluginData.hideWhenNoMusic !== false
+    property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     pillClickAction: () => { playerctl(["play-pause"]); }
 
     function applyForcedNoBackground() {
@@ -43,8 +44,51 @@ PluginComponent {
     function bump(deltaY) {
         if (deltaY === 0)
             return
+
+        const sinkAudio = AudioService.sink?.audio
+        const currentVolumePct = sinkAudio ? Math.round(sinkAudio.volume * 100) : -1
+        const maxVol = AudioService.sinkMaxVolume
+        const atUpperLimit = !!sinkAudio && deltaY > 0 && currentVolumePct >= maxVol
+        const atLowerLimit = !!sinkAudio && deltaY < 0 && currentVolumePct <= 0
+
         const cmd = deltaY > 0 ? "increment" : "decrement"
         Quickshell.execDetached(["dms", "ipc", "call", "audio", cmd, step.toString()])
+
+        if (showOsdAtLimits && (atUpperLimit || atLowerLimit))
+            pulseVolumeOsd(atUpperLimit)
+    }
+
+    property real _volumeRestoreValue: -1
+
+    function pulseVolumeOsd(atUpperLimit) {
+        const sinkAudio = AudioService.sink?.audio
+        if (!sinkAudio)
+            return
+
+        // Force a brief volume property change so VolumeOSD reacts even at hard limits.
+        _volumeRestoreValue = sinkAudio.volume
+        const maxVol = AudioService.sinkMaxVolume / 100
+        const epsilon = 0.001
+
+        if (atUpperLimit) {
+            sinkAudio.volume = Math.max(0, _volumeRestoreValue - epsilon)
+        } else {
+            sinkAudio.volume = Math.min(maxVol, _volumeRestoreValue + epsilon)
+        }
+        volumeRestoreTimer.restart()
+    }
+
+    Timer {
+        id: volumeRestoreTimer
+        interval: 1
+        repeat: false
+        onTriggered: {
+            const sinkAudio = AudioService.sink?.audio
+            if (!sinkAudio || root._volumeRestoreValue < 0)
+                return
+            sinkAudio.volume = root._volumeRestoreValue
+            root._volumeRestoreValue = -1
+        }
     }
 
     function playerctl(args) {
