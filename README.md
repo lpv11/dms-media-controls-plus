@@ -5,6 +5,8 @@ Media controls with a full-bar volume scroll overlay for Dank Material Shell. Di
 ## Features
 - Media controls widget layout
 - Scroll anywhere on the bar to change volume (optional)
+- Left-click anywhere on the widget to toggle play/pause
+- Middle-click the bar(overlay) to toggle mute
 
 ## Settings screenshot
 
