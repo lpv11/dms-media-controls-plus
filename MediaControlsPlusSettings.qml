@@ -35,24 +35,35 @@ PluginSettings {
     }
 
     ToggleSetting {
+        id: showMediaControlsToggle
         settingKey: "showMediaControls"
         label: "Show Media Controls"
         description: "Enabled: show media controls widget. Disabled: hide widget and keep only volume overlay behavior."
         defaultValue: true
+        onValueChanged: {
+            if (value) {
+                textSeekbarToggle.value = false
+                rightClickMediaTabToggle.value = false
+            }
+        }
     }
 
     ToggleSetting {
+        id: textSeekbarToggle
         settingKey: "textSeekbarEnabled"
         label: "Title Area Seekbar"
         description: "Enable a seekbar under the track title area."
         defaultValue: true
+        enabled: !showMediaControlsToggle.value
     }
 
     ToggleSetting {
+        id: rightClickMediaTabToggle
         settingKey: "rightClickOpensMediaTab"
         label: "Right Click Opens Media Tab"
-        description: "When enabled, right-click on the widget/title area opens the DankDash Media tab. When disabled, right-click skips to next track."
+        description: "When enabled, right-click on the widget/title area opens the DankDash Media tab."
         defaultValue: true
+        enabled: !showMediaControlsToggle.value
     }
 
     ToggleSetting {

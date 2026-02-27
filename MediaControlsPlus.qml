@@ -24,17 +24,15 @@ PluginComponent {
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
-    property bool textSeekbarEnabled: pluginData.textSeekbarEnabled !== false
-    property bool rightClickOpensMediaTab: pluginData.rightClickOpensMediaTab !== false
+    property bool textSeekbarEnabled: !showMediaControls && pluginData.textSeekbarEnabled !== false
+    property bool rightClickOpensMediaTab: !showMediaControls && pluginData.rightClickOpensMediaTab !== false
     property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
     pillClickAction: showMediaControls ? (() => {
         playerctl(["play-pause"]);
     }) : null
     pillRightClickAction: (x, y, width, section, screen) => {
-        if (rightClickOpensMediaTab && popoutService && typeof popoutService.toggleDankDash === "function")
+        if (showMediaControls && rightClickOpensMediaTab && popoutService && typeof popoutService.toggleDankDash === "function")
             popoutService.toggleDankDash(1, x, y, width, section, screen)
-        else
-            playerctl(["next"])
     }
 
     // Keep settings mutually exclusive in storage so toggles reflect reality.
@@ -46,6 +44,13 @@ PluginComponent {
     onFullOverlayChanged: {
         if (fullOverlay && allowWorkspaceScroll)
             pluginData.allowWorkspaceScroll = false
+    }
+
+    onShowMediaControlsChanged: {
+        if (showMediaControls) {
+            pluginData.textSeekbarEnabled = false
+            pluginData.rightClickOpensMediaTab = false
+        }
     }
 
     function applyForcedNoBackground() {
@@ -132,7 +137,7 @@ PluginComponent {
         } else if (button === Qt.MiddleButton) {
             playerctl(["previous"]);
         } else if (button === Qt.RightButton) {
-            if (rightClickOpensMediaTab && popoutService && typeof popoutService.toggleDankDash === "function") {
+            if (showMediaControls && rightClickOpensMediaTab && popoutService && typeof popoutService.toggleDankDash === "function") {
                 if (sourceItem) {
                     const globalPos = sourceItem.mapToItem(null, 0, 0);
                     const currentScreen = parentScreen || Screen;
@@ -142,8 +147,6 @@ PluginComponent {
                 } else {
                     popoutService.toggleDankDash(1);
                 }
-            } else {
-                playerctl(["next"]);
             }
         }
     }
