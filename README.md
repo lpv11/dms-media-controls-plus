@@ -1,16 +1,20 @@
 # Media Controls Plus
 
-Media controls with a full-bar volume scroll overlay for Dank Material Shell. Disables workspace scroll.
+Media controls with configurable full-bar volume overlay behavior for Dank Material Shell.
 
 ## Important
 It <big><strong><em>needs</em></strong></big> to be placed at the center otherwise only half the overlay will capture the bar for the volume scroll to work.
 
 ## Features
-- Media controls widget layout
-- Scroll anywhere on the bar to change volume (optional)
-- Optional title area seekbar (click/drag track title area to seek)
-- Left-click anywhere on the widget to toggle play/pause
-- Middle-click the bar(overlay) to toggle mute
+- Media controls widget with track info and playback controls
+- Full Bar Overlay (optional)
+- Allow Workspace Scroll (optional)
+- Title Area Seekbar (optional)
+- Right Click Opens Media Tab (optional)
+- Show Volume OSD At Limits (optional)
+- Scroll Step (configurable)
+- Left-click play/pause toggle
+- Middle-click mute toggle on overlay/widget area
 
 ## Settings screenshot
 
