@@ -24,8 +24,8 @@ PluginComponent {
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
-    property bool textSeekbarEnabled: !showMediaControls && pluginData.textSeekbarEnabled !== false
-    property bool rightClickOpensMediaTab: !showMediaControls && pluginData.rightClickOpensMediaTab !== false
+    property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled !== false
+    property bool rightClickOpensMediaTab: showMediaControls && pluginData.rightClickOpensMediaTab !== false
     property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
     pillClickAction: showMediaControls ? (() => {
         playerctl(["play-pause"]);
@@ -47,7 +47,7 @@ PluginComponent {
     }
 
     onShowMediaControlsChanged: {
-        if (showMediaControls) {
+        if (!showMediaControls) {
             pluginData.textSeekbarEnabled = false
             pluginData.rightClickOpensMediaTab = false
         }
