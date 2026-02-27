@@ -22,6 +22,8 @@ It <big><strong><em>needs</em></strong></big> to be placed at the center otherwi
 ```bash
 git clone https://github.com/lpv11/dms-media-controls-plus.git ~/.config/DankMaterialShell/plugins/mediaControlsPlus
 ```
+Enable plugin from Settings -> Plugins, then add the widget at the center of the bar(if you want the scroll overlay).
+Then restart dms with `dms restart` or from DMS power menu.
 
 ## Settings screenshot
 
