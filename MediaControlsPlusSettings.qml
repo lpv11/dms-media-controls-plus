@@ -15,14 +15,6 @@ PluginSettings {
         color: Theme.surfaceText
     }
 
-    StyledText {
-        width: parent.width
-        text: "Adjust full bar overlay settings."
-        font.pixelSize: Theme.fontSizeSmall
-        color: Theme.surfaceVariantText
-        wrapMode: Text.WordWrap
-    }
-
     Rectangle {
         width: parent.width
         height: 1
@@ -34,7 +26,7 @@ PluginSettings {
         id: fullOverlayToggle
         settingKey: "fullOverlay"
         label: "Full Bar Overlay"
-        description: "Capture scroll across the entire bar area. When enabled, Allow Workspace Scroll is disabled."
+        description: "Capture scroll across the entire bar area to change volume; middle-click mutes. When enabled, 'Allow Workspace Scroll' is disabled."
         defaultValue: true
         onValueChanged: {
             if (value && allowWorkspaceScrollToggle.value)
