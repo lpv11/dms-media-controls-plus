@@ -50,13 +50,6 @@ PluginSettings {
     }
 
     ToggleSetting {
-        settingKey: "textSeekbarEnabled"
-        label: "Title Area Seekbar"
-        description: "Enable seeking by clicking/dragging on the track title area."
-        defaultValue: true
-    }
-
-    ToggleSetting {
         settingKey: "rightClickOpensMediaTab"
         label: "Right Click Opens Media Tab"
         description: "When enabled, right-click on the widget/title area opens the DankDash Media tab. When disabled, right-click skips to next track."

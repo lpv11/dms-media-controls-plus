@@ -24,7 +24,6 @@ PluginComponent {
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
-    property bool textSeekbarEnabled: pluginData.textSeekbarEnabled !== false
     property bool rightClickOpensMediaTab: pluginData.rightClickOpensMediaTab !== false
     property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
     pillClickAction: showMediaControls ? (() => {
@@ -308,13 +307,18 @@ PluginComponent {
                         readonly property bool isWebMedia: lowerIdentity.includes("firefox") || lowerIdentity.includes("chrome") || lowerIdentity.includes("chromium") || lowerIdentity.includes("edge") || lowerIdentity.includes("safari")
                         property bool isSeeking: false
                         property real pendingSeekPosition: -1
-                        readonly property real effectivePosition: pendingSeekPosition >= 0 ? pendingSeekPosition : (activePlayer ? (activePlayer.position || 0) : 0)
-                        readonly property real progressRatio: {
-                            if (!activePlayer || !activePlayer.length || activePlayer.length <= 0)
+                        property int progressTick: 0
+                        readonly property real seekValue: {
+                            progressTick;
+                            if (!activePlayer || activePlayer.length <= 0)
                                 return 0;
-                            // Match built-in seekbar behavior to avoid end-of-track jitter/wrap drift.
-                            const pos = (effectivePosition || 0) % Math.max(1, activePlayer.length);
-                            return pos / activePlayer.length;
+                            if (isSeeking && pendingSeekPosition >= 0) {
+                                const pending = Math.max(0, Math.min(pendingSeekPosition, activePlayer.length));
+                                return pending / activePlayer.length;
+                            }
+                            const pos = (activePlayer.position || 0) % Math.max(1, activePlayer.length);
+                            const ratio = pos / activePlayer.length;
+                            return Math.max(0, Math.min(1, ratio));
                         }
 
                         property string displayText: {
@@ -322,6 +326,13 @@ PluginComponent {
                             const title = isWebMedia ? activePlayer.trackTitle : (activePlayer.trackTitle || "Unknown Track");
                             const subtitle = isWebMedia ? (activePlayer.trackArtist || cachedIdentity) : (activePlayer.trackArtist || "");
                             return subtitle.length > 0 ? title + " • " + subtitle : title;
+                        }
+
+                        Timer {
+                            interval: 250
+                            repeat: true
+                            running: playerAvailable && activePlayer && activePlayer.length > 0 && !textContainer.isSeeking
+                            onTriggered: textContainer.progressTick++
                         }
 
                         anchors.verticalCenter: parent.verticalCenter
@@ -375,23 +386,88 @@ PluginComponent {
                             }
                         }
 
-                        Rectangle {
+                        Item {
+                            id: seekbar
+                            z: 2
+                            opacity: 0.5
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom
                             height: 2
-                            radius: 1
-                            color: Theme.widgetBaseHoverColor
-                            opacity: 0.35
-                            visible: root.textSeekbarEnabled && playerAvailable && activePlayer && activePlayer.length > 0
+                            visible: playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
 
                             Rectangle {
+                                width: parent.width
+                                height: parent.height
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: Theme.widgetBaseHoverColor
+                                opacity: 0.35
+                                radius: height / 2
+                            }
+
+                            Rectangle {
+                                width: Math.max(0, Math.min(parent.width, parent.width * textContainer.seekValue))
+                                height: parent.height
                                 anchors.left: parent.left
-                                anchors.top: parent.top
-                                anchors.bottom: parent.bottom
-                                width: parent.width * textContainer.progressRatio
-                                radius: 1
+                                anchors.verticalCenter: parent.verticalCenter
                                 color: Theme.primary
+                                radius: height / 2
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                acceptedButtons: Qt.LeftButton
+                                enabled: playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
+                                preventStealing: true
+
+                                Timer {
+                                    id: seekDebounceTimer
+                                    interval: 150
+                                    onTriggered: {
+                                        if (textContainer.pendingSeekPosition >= 0 && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
+                                            const clamped = Math.min(textContainer.pendingSeekPosition, activePlayer.length * 0.99);
+                                            activePlayer.position = clamped;
+                                            textContainer.pendingSeekPosition = -1;
+                                        }
+                                    }
+                                }
+
+                                function seekAt(xPos) {
+                                    const r = Math.max(0, Math.min(1, xPos / width));
+                                    textContainer.pendingSeekPosition = r * activePlayer.length;
+                                }
+
+                                onPressed: mouse => {
+                                    textContainer.isSeeking = true;
+                                    seekAt(mouse.x);
+                                    seekDebounceTimer.restart();
+                                    mouse.accepted = true;
+                                }
+
+                                onPositionChanged: mouse => {
+                                    if (pressed && textContainer.isSeeking) {
+                                        seekAt(mouse.x);
+                                        seekDebounceTimer.restart();
+                                    }
+                                }
+
+                                onReleased: {
+                                    textContainer.isSeeking = false;
+                                    seekDebounceTimer.stop();
+                                    if (textContainer.pendingSeekPosition >= 0 && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
+                                        const clamped = Math.min(textContainer.pendingSeekPosition, activePlayer.length * 0.99);
+                                        activePlayer.position = clamped;
+                                        textContainer.pendingSeekPosition = -1;
+                                    }
+                                }
+
+                                onCanceled: {
+                                    textContainer.isSeeking = false;
+                                    seekDebounceTimer.stop();
+                                    textContainer.pendingSeekPosition = -1;
+                                }
                             }
                         }
 
@@ -402,44 +478,13 @@ PluginComponent {
                             acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                             preventStealing: true
 
-                            function seekAt(xPos) {
-                                if (!activePlayer || !activePlayer.canSeek || !activePlayer.length || activePlayer.length <= 0)
-                                    return;
-                                const ratio = Math.max(0, Math.min(1, xPos / width));
-                                textContainer.pendingSeekPosition = ratio * activePlayer.length;
-                            }
-
                             onPressed: mouse => {
-                                if (root.textSeekbarEnabled && mouse.button === Qt.LeftButton && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
-                                    textContainer.isSeeking = true;
-                                    seekAt(mouse.x);
-                                    mouse.accepted = true;
+                                if (mouse.button === Qt.LeftButton && seekbar.visible && mouse.y >= seekbar.y) {
+                                    mouse.accepted = false;
                                     return;
                                 }
                                 root.handleMediaAction(mouse.button, textContainer);
                                 mouse.accepted = true;
-                            }
-
-                            onPositionChanged: mouse => {
-                                if (!root.textSeekbarEnabled || !textContainer.isSeeking || !(mouse.buttons & Qt.LeftButton))
-                                    return;
-                                seekAt(mouse.x);
-                            }
-
-                            onReleased: mouse => {
-                                if (!root.textSeekbarEnabled || mouse.button !== Qt.LeftButton)
-                                    return;
-                                if (textContainer.isSeeking && activePlayer && activePlayer.canSeek && activePlayer.length > 0 && textContainer.pendingSeekPosition >= 0) {
-                                    const clamped = Math.max(0, Math.min(textContainer.pendingSeekPosition, activePlayer.length * 0.99));
-                                    activePlayer.position = clamped;
-                                }
-                                textContainer.pendingSeekPosition = -1;
-                                textContainer.isSeeking = false;
-                            }
-
-                            onCanceled: {
-                                textContainer.pendingSeekPosition = -1;
-                                textContainer.isSeeking = false;
                             }
                         }
                     }
