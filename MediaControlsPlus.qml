@@ -24,6 +24,7 @@ PluginComponent {
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
+    property bool textSeekbarEnabled: pluginData.textSeekbarEnabled !== false
     property bool rightClickOpensMediaTab: pluginData.rightClickOpensMediaTab !== false
     property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
     pillClickAction: showMediaControls ? (() => {
@@ -394,7 +395,7 @@ PluginComponent {
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom
                             height: 2
-                            visible: playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
+                            visible: root.textSeekbarEnabled && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
 
                             Rectangle {
                                 width: parent.width
@@ -419,7 +420,7 @@ PluginComponent {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 acceptedButtons: Qt.LeftButton
-                                enabled: playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
+                                enabled: root.textSeekbarEnabled && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
                                 preventStealing: true
 
                                 Timer {
@@ -479,8 +480,11 @@ PluginComponent {
                             preventStealing: true
 
                             onPressed: mouse => {
-                                if (mouse.button === Qt.LeftButton && seekbar.visible && mouse.y >= seekbar.y) {
-                                    mouse.accepted = false;
+                                if (mouse.button === Qt.LeftButton && root.textSeekbarEnabled && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
+                                    const r = Math.max(0, Math.min(1, mouse.x / width));
+                                    const pos = Math.min(r * activePlayer.length, activePlayer.length * 0.99);
+                                    activePlayer.position = pos;
+                                    mouse.accepted = true;
                                     return;
                                 }
                                 root.handleMediaAction(mouse.button, textContainer);
