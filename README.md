@@ -15,7 +15,7 @@ It <big><strong><em>needs</em></strong></big> to be placed at the center otherwi
 - Scroll Step (configurable)
 - Left-click play/pause toggle
 - Middle-click mute toggle on overlay/widget area
-- (Info) Clicking on the top of the widget will always make it toggle play/pause even with seekbar enabled.
+- (Info) When Media controls are enabled, clicking on the top of the widget will always make it toggle play/pause even with seekbar enabled.
 
 ## Settings screenshot
 
