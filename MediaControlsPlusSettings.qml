@@ -50,6 +50,13 @@ PluginSettings {
     }
 
     ToggleSetting {
+        settingKey: "textSeekbarEnabled"
+        label: "Title Area Seekbar"
+        description: "Enable seeking by clicking/dragging on the track title area."
+        defaultValue: true
+    }
+
+    ToggleSetting {
         id: allowWorkspaceScrollToggle
         settingKey: "allowWorkspaceScroll"
         label: "Allow Workspace Scroll"

@@ -23,6 +23,7 @@ PluginComponent {
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
+    property bool textSeekbarEnabled: pluginData.textSeekbarEnabled !== false
     property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
     pillClickAction: showMediaControls ? (() => {
         playerctl(["play-pause"]);
@@ -285,6 +286,12 @@ PluginComponent {
                         readonly property string cachedIdentity: activePlayer ? (activePlayer.identity || "") : ""
                         readonly property string lowerIdentity: cachedIdentity.toLowerCase()
                         readonly property bool isWebMedia: lowerIdentity.includes("firefox") || lowerIdentity.includes("chrome") || lowerIdentity.includes("chromium") || lowerIdentity.includes("edge") || lowerIdentity.includes("safari")
+                        readonly property real progressRatio: {
+                            if (!activePlayer || !activePlayer.length || activePlayer.length <= 0)
+                                return 0;
+                            const pos = Math.max(0, Math.min(activePlayer.position || 0, activePlayer.length));
+                            return pos / activePlayer.length;
+                        }
 
                         property string displayText: {
                             if (!activePlayer || !activePlayer.trackTitle) return "";
@@ -344,14 +351,54 @@ PluginComponent {
                             }
                         }
 
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            height: 2
+                            radius: 1
+                            color: Theme.widgetBaseHoverColor
+                            opacity: 0.35
+                            visible: root.textSeekbarEnabled && playerAvailable && activePlayer && activePlayer.length > 0
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: parent.width * textContainer.progressRatio
+                                radius: 1
+                                color: Theme.primary
+                            }
+                        }
+
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             enabled: playerAvailable
                             acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                            preventStealing: true
+
+                            function seekAt(xPos) {
+                                if (!activePlayer || !activePlayer.canSeek || !activePlayer.length || activePlayer.length <= 0)
+                                    return;
+                                const ratio = Math.max(0, Math.min(1, xPos / width));
+                                activePlayer.position = ratio * activePlayer.length;
+                            }
+
                             onPressed: mouse => {
+                                if (root.textSeekbarEnabled && mouse.button === Qt.LeftButton && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
+                                    seekAt(mouse.x);
+                                    mouse.accepted = true;
+                                    return;
+                                }
                                 root.handleMediaAction(mouse.button);
                                 mouse.accepted = true;
+                            }
+
+                            onPositionChanged: mouse => {
+                                if (!root.textSeekbarEnabled || !(mouse.buttons & Qt.LeftButton))
+                                    return;
+                                seekAt(mouse.x);
                             }
                         }
                     }
