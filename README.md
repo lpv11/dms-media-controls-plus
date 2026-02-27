@@ -17,6 +17,12 @@ It <big><strong><em>needs</em></strong></big> to be placed at the center otherwi
 - Middle-click mute toggle on overlay/widget area
 - (Info) When media controls are enabled, clicking on the top of the widget will always make it toggle play/pause even with seekbar enabled. That makes it easier to click if DankBar has 0 Edge Spacing.
 
+## Manual Installation
+
+```bash
+git clone https://github.com/lpv11/dms-media-controls-plus.git ~/.config/DankMaterialShell/plugins/mediaControlsPlus
+```
+
 ## Settings screenshot
 
 ![Alt text](https://github.com/lpv11/dms-media-controls-plus/blob/main/screenshot.png?raw=true "")
