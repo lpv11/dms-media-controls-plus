@@ -8,6 +8,7 @@ It NEEDS to be placed in the center otherwise only half the overlay will capture
 ## Features
 - Media controls widget layout
 - Scroll anywhere on the bar to change volume (optional)
+- Optional title area seekbar (click/drag track title area to seek)
 - Left-click anywhere on the widget to toggle play/pause
 - Middle-click the bar(overlay) to toggle mute
 
