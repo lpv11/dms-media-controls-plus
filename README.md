@@ -3,7 +3,7 @@
 Media controls with a full-bar volume scroll overlay for Dank Material Shell. Disables workspace scroll.
 
 ## Important
-It <big><strong><em>needs</em></strong></big> to be placed in the center otherwise only half the overlay will capture the bar for the volume scroll to work.
+It <big><strong><em>needs</em></strong></big> to be placed at the center otherwise only half the overlay will capture the bar for the volume scroll to work.
 
 ## Features
 - Media controls widget layout
