@@ -57,6 +57,13 @@ PluginSettings {
     }
 
     ToggleSetting {
+        settingKey: "rightClickOpensMediaTab"
+        label: "Right Click Opens Media Tab"
+        description: "When enabled, right-click on the widget/title area opens the DankDash Media tab. When disabled, right-click skips to next track."
+        defaultValue: true
+    }
+
+    ToggleSetting {
         id: allowWorkspaceScrollToggle
         settingKey: "allowWorkspaceScroll"
         label: "Allow Workspace Scroll"

@@ -2,7 +2,7 @@
   "id": "mediaControlsPlus",
   "name": "Media Controls Plus",
   "description": "Media controls with full bar volume scroll. Disables workspace scroll. Needs to be placed at the center to have full bar control, otherwise it will be half.",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "license": "MIT",
   "author": "lpv11",
   "icon": "volume_up",

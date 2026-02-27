@@ -10,6 +10,7 @@ import qs.Services
 PluginComponent {
     id: root
 
+    property var popoutService: null
     property var parentScreen: null
     property bool isVertical: false
 
@@ -19,15 +20,22 @@ PluginComponent {
     }
 
     property bool fullOverlay: pluginData.fullOverlay !== false
-    property bool hideWhenNoMusic: pluginData.hideWhenNoMusic !== false
+    property bool hideWhenNoMusic: true
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
     property bool textSeekbarEnabled: pluginData.textSeekbarEnabled !== false
+    property bool rightClickOpensMediaTab: pluginData.rightClickOpensMediaTab !== false
     property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
     pillClickAction: showMediaControls ? (() => {
         playerctl(["play-pause"]);
     }) : null
+    pillRightClickAction: (x, y, width, section, screen) => {
+        if (rightClickOpensMediaTab && popoutService && typeof popoutService.toggleDankDash === "function")
+            popoutService.toggleDankDash(1, x, y, width, section, screen)
+        else
+            playerctl(["next"])
+    }
 
     // Keep settings mutually exclusive in storage so toggles reflect reality.
     onAllowWorkspaceScrollChanged: {
@@ -118,13 +126,25 @@ PluginComponent {
         Quickshell.execDetached(["dms", "ipc", "call", "audio", "mute"])
     }
 
-    function handleMediaAction(button) {
+    function handleMediaAction(button, sourceItem) {
         if (button === Qt.LeftButton) {
             playerctl(["play-pause"]);
         } else if (button === Qt.MiddleButton) {
             playerctl(["previous"]);
         } else if (button === Qt.RightButton) {
-            playerctl(["next"]);
+            if (rightClickOpensMediaTab && popoutService && typeof popoutService.toggleDankDash === "function") {
+                if (sourceItem) {
+                    const globalPos = sourceItem.mapToItem(null, 0, 0);
+                    const currentScreen = parentScreen || Screen;
+                    const barPosition = axis?.edge === "left" ? 2 : (axis?.edge === "right" ? 3 : (axis?.edge === "top" ? 0 : 1));
+                    const pos = SettingsData.getPopupTriggerPosition(globalPos, currentScreen, barThickness, sourceItem.width, barSpacing, barPosition, barConfig);
+                    popoutService.toggleDankDash(1, pos.x, pos.y, pos.width, section, currentScreen);
+                } else {
+                    popoutService.toggleDankDash(1);
+                }
+            } else {
+                playerctl(["next"]);
+            }
         }
     }
 
@@ -244,7 +264,7 @@ PluginComponent {
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                         onPressed: mouse => {
-                            root.handleMediaAction(mouse.button);
+                            root.handleMediaAction(mouse.button, parent);
                             mouse.accepted = true;
                         }
                     }
@@ -286,10 +306,14 @@ PluginComponent {
                         readonly property string cachedIdentity: activePlayer ? (activePlayer.identity || "") : ""
                         readonly property string lowerIdentity: cachedIdentity.toLowerCase()
                         readonly property bool isWebMedia: lowerIdentity.includes("firefox") || lowerIdentity.includes("chrome") || lowerIdentity.includes("chromium") || lowerIdentity.includes("edge") || lowerIdentity.includes("safari")
+                        property bool isSeeking: false
+                        property real pendingSeekPosition: -1
+                        readonly property real effectivePosition: pendingSeekPosition >= 0 ? pendingSeekPosition : (activePlayer ? (activePlayer.position || 0) : 0)
                         readonly property real progressRatio: {
                             if (!activePlayer || !activePlayer.length || activePlayer.length <= 0)
                                 return 0;
-                            const pos = Math.max(0, Math.min(activePlayer.position || 0, activePlayer.length));
+                            // Match built-in seekbar behavior to avoid end-of-track jitter/wrap drift.
+                            const pos = (effectivePosition || 0) % Math.max(1, activePlayer.length);
                             return pos / activePlayer.length;
                         }
 
@@ -382,23 +406,40 @@ PluginComponent {
                                 if (!activePlayer || !activePlayer.canSeek || !activePlayer.length || activePlayer.length <= 0)
                                     return;
                                 const ratio = Math.max(0, Math.min(1, xPos / width));
-                                activePlayer.position = ratio * activePlayer.length;
+                                textContainer.pendingSeekPosition = ratio * activePlayer.length;
                             }
 
                             onPressed: mouse => {
                                 if (root.textSeekbarEnabled && mouse.button === Qt.LeftButton && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
+                                    textContainer.isSeeking = true;
                                     seekAt(mouse.x);
                                     mouse.accepted = true;
                                     return;
                                 }
-                                root.handleMediaAction(mouse.button);
+                                root.handleMediaAction(mouse.button, textContainer);
                                 mouse.accepted = true;
                             }
 
                             onPositionChanged: mouse => {
-                                if (!root.textSeekbarEnabled || !(mouse.buttons & Qt.LeftButton))
+                                if (!root.textSeekbarEnabled || !textContainer.isSeeking || !(mouse.buttons & Qt.LeftButton))
                                     return;
                                 seekAt(mouse.x);
+                            }
+
+                            onReleased: mouse => {
+                                if (!root.textSeekbarEnabled || mouse.button !== Qt.LeftButton)
+                                    return;
+                                if (textContainer.isSeeking && activePlayer && activePlayer.canSeek && activePlayer.length > 0 && textContainer.pendingSeekPosition >= 0) {
+                                    const clamped = Math.max(0, Math.min(textContainer.pendingSeekPosition, activePlayer.length * 0.99));
+                                    activePlayer.position = clamped;
+                                }
+                                textContainer.pendingSeekPosition = -1;
+                                textContainer.isSeeking = false;
+                            }
+
+                            onCanceled: {
+                                textContainer.pendingSeekPosition = -1;
+                                textContainer.isSeeking = false;
                             }
                         }
                     }
@@ -457,7 +498,7 @@ PluginComponent {
                             cursorShape: Qt.PointingHandCursor
                             acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                             onPressed: mouse => {
-                                root.handleMediaAction(mouse.button);
+                                root.handleMediaAction(mouse.button, parent);
                                 mouse.accepted = true;
                             }
                         }
