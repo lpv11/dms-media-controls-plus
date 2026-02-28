@@ -15,6 +15,12 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Scroll Step (configurable): volume change per wheel notch
 - Restore Defaults button in settings
 
+## Known Bugs
+- Seekbar feedback totally misbehaves unless it's clicked on, don't know how to fix.
+
+## Notes
+Seekbar Visual Feedback doesn't work well unless it's clicked on and I can't figure out how to fix so I chose to disable all the seekbar options by default.
+
 ## Manual Installation
 
 ```bash
