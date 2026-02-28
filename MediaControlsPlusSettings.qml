@@ -61,7 +61,7 @@ PluginSettings {
         id: rightClickMediaTabToggle
         settingKey: "rightClickOpensMediaTab"
         label: "Right Click Opens Media Tab"
-        description: "When enabled, right-click on the widget/title area opens the DankDash Media tab."
+        description: "When enabled, right-click on the widget/title area opens media controls popout content (without tabs)."
         defaultValue: true
         enabled: showMediaControlsToggle.value
     }

@@ -31,8 +31,8 @@ PluginComponent {
         playerctl(["play-pause"]);
     }) : null
     pillRightClickAction: (x, y, width, section, screen) => {
-        if (showMediaControls && rightClickOpensMediaTab && popoutService && typeof popoutService.toggleDankDash === "function")
-            popoutService.toggleDankDash(1, x, y, width, section, screen)
+        if (showMediaControls && rightClickOpensMediaTab)
+            toggleMediaOnlyPopout(x, y, width, section, screen)
     }
 
     // Keep settings mutually exclusive in storage so toggles reflect reality.
@@ -131,22 +131,65 @@ PluginComponent {
         Quickshell.execDetached(["dms", "ipc", "call", "audio", "mute"])
     }
 
+    function currentBarPosition() {
+        return axis?.edge === "left" ? SettingsData.Position.Left
+                                     : (axis?.edge === "right" ? SettingsData.Position.Right
+                                                                : (axis?.edge === "top" ? SettingsData.Position.Top : SettingsData.Position.Bottom))
+    }
+
+    function toggleMediaOnlyPopout(x, y, width, triggerSection, screenObj) {
+        const currentScreen = screenObj || parentScreen || Screen
+        if (!currentScreen)
+            return
+
+        mediaOnlyPopout.setTriggerPosition(x || 0,
+                                           y || 0,
+                                           width || barThickness,
+                                           triggerSection || section || "",
+                                           currentScreen,
+                                           currentBarPosition(),
+                                           barThickness,
+                                           barSpacing,
+                                           barConfig)
+        mediaOnlyPopout.toggle()
+    }
+
     function handleMediaAction(button, sourceItem) {
         if (button === Qt.LeftButton) {
             playerctl(["play-pause"]);
         } else if (button === Qt.MiddleButton) {
             playerctl(["previous"]);
         } else if (button === Qt.RightButton) {
-            if (showMediaControls && rightClickOpensMediaTab && popoutService && typeof popoutService.toggleDankDash === "function") {
+            if (showMediaControls && rightClickOpensMediaTab) {
+                const currentScreen = parentScreen || Screen;
                 if (sourceItem) {
                     const globalPos = sourceItem.mapToItem(null, 0, 0);
-                    const currentScreen = parentScreen || Screen;
-                    const barPosition = axis?.edge === "left" ? 2 : (axis?.edge === "right" ? 3 : (axis?.edge === "top" ? 0 : 1));
+                    const barPosition = currentBarPosition();
                     const pos = SettingsData.getPopupTriggerPosition(globalPos, currentScreen, barThickness, sourceItem.width, barSpacing, barPosition, barConfig);
-                    popoutService.toggleDankDash(1, pos.x, pos.y, pos.width, section, currentScreen);
+                    toggleMediaOnlyPopout(pos.x, pos.y, pos.width, section, currentScreen);
                 } else {
-                    popoutService.toggleDankDash(1);
+                    toggleMediaOnlyPopout(0, 0, barThickness, section, currentScreen);
                 }
+            }
+        }
+    }
+
+    DankPopout {
+        id: mediaOnlyPopout
+        layerNamespace: "dms:dash-media-only"
+        popupWidth: 700
+        popupHeight: contentLoader.item ? contentLoader.item.implicitHeight : 410
+        onBackgroundClicked: close()
+        content: Component {
+            MediaPlayerTab {
+                targetScreen: mediaOnlyPopout.screen
+                popoutX: mediaOnlyPopout.alignedX
+                popoutY: mediaOnlyPopout.alignedY
+                popoutWidth: mediaOnlyPopout.alignedWidth
+                popoutHeight: mediaOnlyPopout.alignedHeight
+                contentOffsetY: Theme.spacingM + Theme.spacingXS
+                section: mediaOnlyPopout.triggerSection
+                barPosition: mediaOnlyPopout.effectiveBarPosition
             }
         }
     }
