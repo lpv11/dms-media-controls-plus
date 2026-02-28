@@ -80,7 +80,7 @@ PluginSettings {
         id: textSeekbarToggle
         settingKey: "textSeekbarEnabled"
         label: "Title Area Seekbar"
-        description: "Enable a seekbar on the track title area - ........"
+        description: "Enable a seekbar on the track title area - can drag or click to seek on song title area."
         defaultValue: false
         enabled: showMediaControlsToggle.value
     }
