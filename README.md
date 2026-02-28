@@ -16,7 +16,7 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Scroll Step (configurable): volume change per wheel notch
 
 ## Known Bugs
-Seekbar Visual Feedback at least on Firefox browser won't update unless it's clicked on and I can't figure out how to fix it so I chose to disable all the seekbar options by default. Works fine for local players. I'd appreciate any help on how to fix the Firefox/Browser issue.
+Seekbar Visual Feedback at least on Firefox browser won't update correctly unless it's clicked on and I can't figure out how to fix it so I chose to disable all the seekbar options by default. Works fine for local players. I'd appreciate any help on how to fix the Firefox/Browser issue.
 
 ## Manual Installation
 
