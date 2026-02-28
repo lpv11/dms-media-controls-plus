@@ -7,12 +7,38 @@ PluginSettings {
     id: root
     pluginId: "mediaControlsPlus"
 
-    StyledText {
+    Item {
         width: parent.width
-        text: "Settings"
-        font.pixelSize: Theme.fontSizeLarge
-        font.weight: Font.Bold
-        color: Theme.surfaceText
+        height: Math.max(settingsTitle.implicitHeight, restoreDefaultsButton.implicitHeight)
+
+        StyledText {
+            id: settingsTitle
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Settings"
+            font.pixelSize: Theme.fontSizeLarge
+            font.weight: Font.Bold
+            color: Theme.surfaceText
+        }
+
+        DankButton {
+            id: restoreDefaultsButton
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Restore Defaults"
+            iconName: "restart_alt"
+            onClicked: {
+                allowWorkspaceScrollToggle.value = false
+                fullOverlayToggle.value = true
+                showMediaControlsToggle.value = true
+                textSeekbarToggle.value = true
+                widgetAreaScrollSeekToggle.value = false
+                widgetScrollSeekStepSetting.value = widgetScrollSeekStepSetting.defaultValue
+                rightClickMediaTabToggle.value = true
+                volumeScrollStepSetting.value = volumeScrollStepSetting.defaultValue
+                showOsdAtLimitsToggle.value = true
+            }
+        }
     }
 
     Rectangle {
@@ -68,11 +94,12 @@ PluginSettings {
     }
 
     StringSetting {
+        id: widgetScrollSeekStepSetting
         settingKey: "widgetScrollSeekStep"
         label: "Scroll To Seek Step"
         description: "Seek seconds per wheel notch for Widget Scroll To Seek (default: 10)."
-        placeholder: "5"
-        defaultValue: "5"
+        placeholder: "10"
+        defaultValue: "10"
         enabled: showMediaControlsToggle.value && widgetAreaScrollSeekToggle.value
     }
 
@@ -105,6 +132,7 @@ PluginSettings {
     }
 
     StringSetting {
+        id: volumeScrollStepSetting
         settingKey: "step"
         label: "Scroll Step"
         description: "Volume change per scroll tick (default: 5)"
@@ -113,6 +141,7 @@ PluginSettings {
     }
 
     ToggleSetting {
+        id: showOsdAtLimitsToggle
         settingKey: "showOsdAtLimits"
         label: "Show Volume OSD At Limits"
         description: "Show volume OSD when scrolling down at 0% or scrolling up at max volume."
