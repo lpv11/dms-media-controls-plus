@@ -64,7 +64,7 @@ PluginSettings {
         id: showMediaControlsToggle
         settingKey: "showMediaControls"
         label: "Show Media Controls"
-        description: "Enabled: show media controls widget. Disabled: hide widget and keep only volume overlay behavior."
+        description: "Show media controls widget. Full Bar Overlay can be enabled without it."
         defaultValue: true
         onValueChanged: {
             if (!value) {
@@ -107,7 +107,7 @@ PluginSettings {
         id: rightClickMediaTabToggle
         settingKey: "rightClickOpensMediaTab"
         label: "Right Click Opens Media Tab"
-        description: "When enabled, right-click on the widget/title area opens media controls popout content (without tabs)."
+        description: "When enabled, right-click on the widget/title area opens media controls popout content."
         defaultValue: true
         enabled: showMediaControlsToggle.value
     }
