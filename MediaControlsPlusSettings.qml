@@ -89,7 +89,7 @@ PluginSettings {
         id: seekbarVisualFeedbackToggle
         settingKey: "seekbarVisualFeedback"
         label: "Seekbar Visual Feedback"
-        description: "Show seekbar progress under the title area. Doesn't work well."
+        description: "Show seekbar progress under the title area. Doesn't work well with Firefox and maybe other browsers."
         defaultValue: false
         enabled: showMediaControlsToggle.value
     }
