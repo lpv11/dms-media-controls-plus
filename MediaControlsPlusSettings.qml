@@ -30,6 +30,7 @@ PluginSettings {
             onClicked: {
                 allowWorkspaceScrollToggle.value = false
                 fullOverlayToggle.value = true
+                middleClickMuteToggle.value = true
                 showMediaControlsToggle.value = true
                 textSeekbarToggle.value = false
                 seekbarVisualFeedbackToggle.value = false
@@ -53,12 +54,21 @@ PluginSettings {
         id: fullOverlayToggle
         settingKey: "fullOverlay"
         label: "Full Bar Overlay"
-        description: "Capture scroll across the entire bar area to change volume; middle-click mutes. When enabled, 'Allow Workspace Scroll' is disabled."
+        description: "Capture scroll across the entire bar area to change volume. When enabled, 'Allow Workspace Scroll' is disabled."
         defaultValue: true
         onValueChanged: {
             if (value && allowWorkspaceScrollToggle.value)
                 allowWorkspaceScrollToggle.value = false
         }
+    }
+
+    ToggleSetting {
+        id: middleClickMuteToggle
+        settingKey: "middleClickMute"
+        label: "Middle Click Mute"
+        description: "Middle-click the bar to mute audio."
+        defaultValue: true
+        enabled: fullOverlayToggle.value
     }
 
     ToggleSetting {

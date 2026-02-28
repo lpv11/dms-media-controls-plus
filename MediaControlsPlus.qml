@@ -26,6 +26,7 @@ PluginComponent {
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
+    property bool middleClickMuteEnabled: overlayEnabled && pluginData.middleClickMute !== false
     property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled === true
     property bool seekbarVisualFeedbackEnabled: showMediaControls && pluginData.seekbarVisualFeedback === true
     property bool widgetAreaScrollSeekEnabled: showMediaControls && pluginData.widgetAreaScrollSeek === true
@@ -262,7 +263,7 @@ PluginComponent {
         if (button === Qt.LeftButton) {
             togglePlayPause();
         } else if (button === Qt.MiddleButton) {
-            if (overlayEnabled)
+            if (overlayEnabled && middleClickMuteEnabled)
                 toggleMute();
             else
                 previousTrack();
@@ -875,7 +876,7 @@ PluginComponent {
 
             MouseArea {
                 anchors.fill: parent
-                enabled: root.overlayEnabled
+                enabled: root.overlayEnabled && root.middleClickMuteEnabled
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.MiddleButton
                 onPressed: mouse => {
@@ -893,7 +894,7 @@ PluginComponent {
                 y: (parent.height - root.barThickness) / 2
                 width: root.parentScreen ? root.parentScreen.width * 4 : 0
                 height: root.barThickness
-                acceptedButtons: Qt.MiddleButton
+                acceptedButtons: root.middleClickMuteEnabled ? Qt.MiddleButton : Qt.NoButton
                 hoverEnabled: false
                 z: 2000
 
@@ -961,7 +962,7 @@ PluginComponent {
 
             MouseArea {
                 anchors.fill: parent
-                enabled: root.overlayEnabled
+                enabled: root.overlayEnabled && root.middleClickMuteEnabled
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.MiddleButton
                 onPressed: mouse => {
@@ -979,7 +980,7 @@ PluginComponent {
                 y: -(root.parentScreen ? root.parentScreen.height * 2 : 0)
                 width: root.barThickness
                 height: root.parentScreen ? root.parentScreen.height * 4 : 0
-                acceptedButtons: Qt.MiddleButton
+                acceptedButtons: root.middleClickMuteEnabled ? Qt.MiddleButton : Qt.NoButton
                 hoverEnabled: false
                 z: 2000
 
