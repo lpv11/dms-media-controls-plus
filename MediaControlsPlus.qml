@@ -14,6 +14,7 @@ PluginComponent {
     property var popoutService: null
     property var parentScreen: null
     property bool isVertical: false
+    property var stickyPlayer: null
 
     property int step: {
         const n = Number(pluginData.step)
@@ -35,7 +36,7 @@ PluginComponent {
     property bool rightClickOpensMediaTab: showMediaControls && pluginData.rightClickOpensMediaTab !== false
     property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
     pillClickAction: showMediaControls ? (() => {
-        playerctl(["play-pause"]);
+        togglePlayPause();
     }) : null
     pillRightClickAction: (x, y, width, section, screen) => {
         if (showMediaControls && rightClickOpensMediaTab)
@@ -76,7 +77,7 @@ PluginComponent {
     Component.onCompleted: applyForcedNoBackground()
     onBarConfigChanged: applyForcedNoBackground()
 
-    visibilityCommand: hideWhenNoMusic ? "/sbin/playerctl status 2>/dev/null | grep -Eq '^(Playing|Paused)$'" : ""
+    visibilityCommand: hideWhenNoMusic ? "/usr/bin/playerctl -a status 2>/dev/null | grep -Eq '^(Playing|Paused)$'" : ""
     visibilityInterval: hideWhenNoMusic ? 2 : 0
 
     function bump(deltaY) {
@@ -149,6 +150,66 @@ PluginComponent {
         Quickshell.execDetached(["/usr/bin/playerctl"].concat(args))
     }
 
+    function activePlayer() {
+        const players = MprisController.availablePlayers || []
+        const active = MprisController.activePlayer
+        const stickyValid = stickyPlayer && players.indexOf(stickyPlayer) !== -1
+        const stickyPlaying = stickyValid && (stickyPlayer.playbackState === MprisPlaybackState.Playing || stickyPlayer.playbackState === 1)
+
+        if (stickyPlaying)
+            return stickyPlayer
+
+        if (active && (active.playbackState === MprisPlaybackState.Playing || active.playbackState === 1)) {
+            stickyPlayer = active
+            return active
+        }
+
+        for (let i = 0; i < players.length; i++) {
+            const p = players[i]
+            if (p && (p.playbackState === MprisPlaybackState.Playing || p.playbackState === 1)) {
+                stickyPlayer = p
+                return p
+            }
+        }
+
+        // No player is playing: keep current sticky target if still present.
+        if (stickyValid)
+            return stickyPlayer
+
+        stickyPlayer = players.length > 0 ? players[0] : null
+        return stickyPlayer
+    }
+
+    function togglePlayPause() {
+        const player = activePlayer()
+        if (player && typeof player.togglePlaying === "function") {
+            stickyPlayer = player
+            player.togglePlaying()
+            return
+        }
+        playerctl(["play-pause"])
+    }
+
+    function previousTrack() {
+        const player = activePlayer()
+        if (player && typeof player.previous === "function" && player.canGoPrevious !== false) {
+            stickyPlayer = player
+            player.previous()
+            return
+        }
+        playerctl(["previous"])
+    }
+
+    function nextTrack() {
+        const player = activePlayer()
+        if (player && typeof player.next === "function" && player.canGoNext !== false) {
+            stickyPlayer = player
+            player.next()
+            return
+        }
+        playerctl(["next"])
+    }
+
     function toggleMute() {
         if (typeof AudioService.toggleMute === "function") {
             AudioService.toggleMute()
@@ -199,12 +260,12 @@ PluginComponent {
 
     function handleMediaAction(button, sourceItem) {
         if (button === Qt.LeftButton) {
-            playerctl(["play-pause"]);
+            togglePlayPause();
         } else if (button === Qt.MiddleButton) {
             if (overlayEnabled)
                 toggleMute();
             else
-                playerctl(["previous"]);
+                previousTrack();
         } else if (button === Qt.RightButton) {
             if (showMediaControls && rightClickOpensMediaTab) {
                 const currentScreen = parentScreen || Screen;
@@ -246,7 +307,7 @@ PluginComponent {
         Item {
             id: mediaRoot
 
-            readonly property MprisPlayer activePlayer: MprisController.activePlayer
+            readonly property var activePlayer: root.activePlayer()
             readonly property bool playerAvailable: activePlayer !== null
             readonly property real dpr: root.parentScreen ? CompositorService.getScreenScale(root.parentScreen) : 1
             readonly property real horizontalPadding: (root.barConfig?.noBackground ?? false) ? 0 : Theme.snap(Math.max(Theme.spacingXS, Theme.spacingS * (root.widgetThickness / 30)), dpr)
@@ -739,7 +800,7 @@ PluginComponent {
                             enabled: playerAvailable
                             cursorShape: Qt.PointingHandCursor
                             onPressed: {
-                                root.playerctl(["previous"]);
+                                root.previousTrack();
                             }
                         }
                     }
@@ -794,7 +855,7 @@ PluginComponent {
                             enabled: playerAvailable
                             cursorShape: Qt.PointingHandCursor
                             onPressed: {
-                                root.playerctl(["next"]);
+                                root.nextTrack();
                             }
                         }
                     }
