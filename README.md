@@ -15,14 +15,15 @@ It <big><strong><em>needs</em></strong></big> to be placed at the center otherwi
 - Scroll Step (configurable)
 - Left-click play/pause toggle
 - Middle-click mute toggle on overlay/widget area
-- (Info) When media controls are enabled, clicking on the top of the widget will always make it toggle play/pause even with seekbar enabled. That makes it easier to click if DankBar has 0 Edge Spacing.
+- (Info) When media controls are enabled, clicking at the very top of the widget will always make it toggle play/pause even with seekbar enabled. That makes it easier to click using DankBar with 0 Edge Spacing. Also same happens if you click at the very bottom of the widget. That I don't know if I'll bother to fix.
 
 ## Manual Installation
 
 ```bash
 git clone https://github.com/lpv11/dms-media-controls-plus.git ~/.config/DankMaterialShell/plugins/mediaControlsPlus
 ```
-Enable plugin from Settings -> Plugins, add the widget at the center of the bar from Settings -> Widgets (if you want the scroll overlay), restart dms with `dms restart` or from DMS power menu.
+In Settings -> Plugins click Scan, then enable the plugin and add the widget at the center of the bar from Settings -> Widgets.
+Restart dms with `dms restart` or from DMS power menu if it doesn't load.
 
 ## Settings screenshot
 
