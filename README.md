@@ -16,7 +16,7 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Restore Defaults button in settings
 
 ## Known Bugs
-- Seekbar feedback totally misbehaves unless it's clicked on, don't know how to fix.
+- Seekbar feedback totally misbehaves unless it's clicked on, don't know how to fix. I would appreciate help on this one.
 
 ## Notes
 Seekbar Visual Feedback doesn't work well unless it's clicked on and I can't figure out how to fix so I chose to disable all the seekbar options by default.
