@@ -26,6 +26,7 @@ PluginComponent {
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
     property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled !== false
+    property bool seekbarVisualFeedbackEnabled: showMediaControls && pluginData.seekbarVisualFeedback !== false
     property bool widgetAreaScrollSeekEnabled: showMediaControls && pluginData.widgetAreaScrollSeek === true
     property int widgetScrollSeekStep: {
         const n = Number(pluginData.widgetScrollSeekStep)
@@ -588,7 +589,7 @@ PluginComponent {
                             height: 2
                             // Keep progress feedback visible while widget scroll-to-seek is enabled,
                             // even if title-area click/drag seek is disabled.
-                            visible: (root.textSeekbarEnabled || root.widgetAreaScrollSeekEnabled) && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
+                            visible: root.seekbarVisualFeedbackEnabled && (root.textSeekbarEnabled || root.widgetAreaScrollSeekEnabled) && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
 
                             Rectangle {
                                 width: parent.width

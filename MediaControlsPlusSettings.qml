@@ -32,6 +32,7 @@ PluginSettings {
                 fullOverlayToggle.value = true
                 showMediaControlsToggle.value = true
                 textSeekbarToggle.value = true
+                seekbarVisualFeedbackToggle.value = true
                 widgetAreaScrollSeekToggle.value = false
                 widgetScrollSeekStepSetting.value = widgetScrollSeekStepSetting.defaultValue
                 rightClickMediaTabToggle.value = true
@@ -80,6 +81,15 @@ PluginSettings {
         settingKey: "textSeekbarEnabled"
         label: "Title Area Seekbar"
         description: "Enable a seekbar under the track title area - can drag or click to seek on song title area."
+        defaultValue: true
+        enabled: showMediaControlsToggle.value
+    }
+
+    ToggleSetting {
+        id: seekbarVisualFeedbackToggle
+        settingKey: "seekbarVisualFeedback"
+        label: "Seekbar Visual Feedback"
+        description: "Show seekbar progress under the title area. Doesn't work well."
         defaultValue: true
         enabled: showMediaControlsToggle.value
     }
