@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
+import Quickshell.Io
 import qs.Common
 import qs.Widgets
 import qs.Modules.Plugins
@@ -279,6 +280,15 @@ PluginComponent {
                 return audioVizHeight + Theme.spacingXS + playButtonHeight;
             }
 
+            onActivePlayerChanged: {
+                // Reset transient seek state on player switches so progress updates do not stall.
+                if (textContainer) {
+                    textContainer.isSeeking = false;
+                    textContainer.pendingSeekPosition = -1;
+                    textContainer.progressTick++;
+                }
+            }
+
             implicitWidth: (playerAvailable && root.showMediaControls) ? currentContentWidth : 0
             implicitHeight: (playerAvailable && root.showMediaControls) ? currentContentHeight : 0
             width: implicitWidth
@@ -410,6 +420,7 @@ PluginComponent {
                         property bool isSeeking: false
                         property real pendingSeekPosition: -1
                         property int progressTick: 0
+                        property real polledPosition: -1
                         readonly property real seekValue: {
                             progressTick;
                             if (!activePlayer || activePlayer.length <= 0)
@@ -418,7 +429,10 @@ PluginComponent {
                                 const pending = Math.max(0, Math.min(pendingSeekPosition, activePlayer.length));
                                 return pending / activePlayer.length;
                             }
-                            const pos = (activePlayer.position || 0) % Math.max(1, activePlayer.length);
+                            const nativePos = Math.max(0, activePlayer.position || 0);
+                            const fallbackPos = Math.max(0, polledPosition);
+                            const resolvedPos = nativePos > 0 ? nativePos : fallbackPos;
+                            const pos = resolvedPos % Math.max(1, activePlayer.length);
                             const ratio = pos / activePlayer.length;
                             return Math.max(0, Math.min(1, ratio));
                         }
@@ -433,9 +447,85 @@ PluginComponent {
                         Timer {
                             interval: 250
                             repeat: true
-                            running: playerAvailable && activePlayer && activePlayer.length > 0 && !textContainer.isSeeking
+                            running: playerAvailable && activePlayer && activePlayer.length > 0
                             onTriggered: textContainer.progressTick++
                         }
+
+                        Timer {
+                            interval: 1000
+                            repeat: true
+                            running: playerAvailable && activePlayer && !textContainer.isSeeking
+                            onTriggered: {
+                                if (activePlayer && (activePlayer.position || 0) > 0)
+                                    textContainer.polledPosition = activePlayer.position
+                                if (!playerctlPositionFetcher.running)
+                                    playerctlPositionFetcher.running = true
+                                textContainer.progressTick++
+                            }
+                        }
+
+                        Process {
+                            id: playerctlPositionFetcher
+                            running: false
+                            command: ["/usr/bin/playerctl", "metadata", "mpris:position"]
+
+                            stdout: StdioCollector {
+                                onStreamFinished: {
+                                    const parts = text.trim().split(/\s+/)
+                                    const last = parts.length > 0 ? parts[parts.length - 1] : ""
+                                    const micro = Number(last)
+                                    const v = Number.isFinite(micro) ? (micro / 1000000) : NaN
+                                    if (Number.isFinite(v) && v >= 0) {
+                                        textContainer.polledPosition = v
+                                        textContainer.progressTick++
+                                    }
+                                }
+                            }
+                        }
+
+                        Connections {
+                            target: activePlayer
+
+                            function onPositionChanged() {
+                                textContainer.progressTick++;
+                            }
+
+                            function onLengthChanged() {
+                                textContainer.progressTick++;
+                            }
+
+                            function onPlaybackStateChanged() {
+                                textContainer.progressTick++;
+                            }
+
+                            function onTrackTitleChanged() {
+                                textContainer.isSeeking = false;
+                                textContainer.pendingSeekPosition = -1;
+                                textContainer.polledPosition = -1;
+                                if (!playerctlPositionFetcher.running)
+                                    playerctlPositionFetcher.running = true
+                                textContainer.progressTick++;
+                            }
+                        }
+
+                        Connections {
+                            target: MprisController
+
+                            function onActivePlayerChanged() {
+                                textContainer.isSeeking = false;
+                                textContainer.pendingSeekPosition = -1;
+                                textContainer.polledPosition = -1;
+                                if (!playerctlPositionFetcher.running)
+                                    playerctlPositionFetcher.running = true
+                                textContainer.progressTick++;
+                            }
+
+                            function onAvailablePlayersChanged() {
+                                textContainer.progressTick++;
+                            }
+                        }
+
+                        Component.onCompleted: progressTick++
 
                         anchors.verticalCenter: parent.verticalCenter
                         width: textWidth
