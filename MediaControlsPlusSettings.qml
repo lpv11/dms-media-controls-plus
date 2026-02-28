@@ -77,6 +77,15 @@ PluginSettings {
     }
 
     ToggleSetting {
+        id: rightClickMediaTabToggle
+        settingKey: "rightClickOpensMediaTab"
+        label: "Right Click Opens Media Tab"
+        description: "When enabled, right-click on the widget/title area opens media controls popout content."
+        defaultValue: false
+        enabled: showMediaControlsToggle.value
+    }
+
+    ToggleSetting {
         id: textSeekbarToggle
         settingKey: "textSeekbarEnabled"
         label: "Title Area Seekbar"
@@ -111,15 +120,6 @@ PluginSettings {
         placeholder: "10"
         defaultValue: "10"
         enabled: showMediaControlsToggle.value && widgetAreaScrollSeekToggle.value
-    }
-
-    ToggleSetting {
-        id: rightClickMediaTabToggle
-        settingKey: "rightClickOpensMediaTab"
-        label: "Right Click Opens Media Tab"
-        description: "When enabled, right-click on the widget/title area opens media controls popout content."
-        defaultValue: false
-        enabled: showMediaControlsToggle.value
     }
 
     ToggleSetting {
