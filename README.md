@@ -1,4 +1,4 @@
-# Help : See Known Bugs
+# Help : See Known Bugs below
 
 # Media Controls Plus
 
