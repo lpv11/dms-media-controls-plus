@@ -70,7 +70,7 @@ PluginSettings {
     StringSetting {
         settingKey: "widgetScrollSeekStep"
         label: "Scroll To Seek Step"
-        description: "Seek seconds per wheel notch for Widget Scroll To Seek (default: 5)."
+        description: "Seek seconds per wheel notch for Widget Scroll To Seek (default: 10)."
         placeholder: "5"
         defaultValue: "5"
         enabled: showMediaControlsToggle.value && widgetAreaScrollSeekToggle.value

@@ -16,7 +16,7 @@ PluginComponent {
 
     property int step: {
         const n = Number(pluginData.step)
-        return Number.isFinite(n) && n > 0 ? Math.floor(n) : 5
+        return Number.isFinite(n) && n > 0 ? Math.floor(n) : 10
     }
 
     property bool fullOverlay: pluginData.fullOverlay !== false
@@ -28,7 +28,7 @@ PluginComponent {
     property bool widgetAreaScrollSeekEnabled: showMediaControls && pluginData.widgetAreaScrollSeek === true
     property int widgetScrollSeekStep: {
         const n = Number(pluginData.widgetScrollSeekStep)
-        return Number.isFinite(n) && n > 0 ? Math.floor(n) : 5
+        return Number.isFinite(n) && n > 0 ? Math.floor(n) : 10
     }
     property bool rightClickOpensMediaTab: showMediaControls && pluginData.rightClickOpensMediaTab !== false
     property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
