@@ -6,11 +6,12 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Full media controls widget with track info and playback controls
 - Full Bar Overlay (optional): scroll to change volume anywhere on the bar, middle-click mutes
 - Show Media Controls (optional): disable to run as volume overlay only
-- Allow Workspace Scroll (optional): restores default DankBar workspace wheel behavior
+- Right Click Opens Media Tab (optional): opens media-only popout content (without tabs)
+- Seekbar Visual Feedback (optional): shows seekbar progress under the title area
 - Title Area Seekbar (optional): click or drag under title area to seek
 - Widget Scroll To Seek (optional): use mouse wheel on media controls to seek
 - Scroll To Seek Step (configurable): seconds per wheel notch for Widget Scroll To Seek
-- Right Click Opens Media Tab (optional): opens media-only popout content (without tabs)
+- Allow Workspace Scroll (optional): restores default DankBar workspace wheel behavior
 - Show Volume OSD At Limits (optional): still shows OSD when scrolling at 0% or max volume
 - Scroll Step (configurable): volume change per wheel notch
 - Restore Defaults button in settings
