@@ -806,8 +806,8 @@ PluginComponent {
     horizontalBarPill: Component {
         Item {
             id: overlay
-            implicitWidth: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitWidth : Theme.iconSize)
-            implicitHeight: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitHeight : Theme.iconSize)
+            implicitWidth: root.showMediaControls ? (mediaLoader.item ? mediaLoader.item.implicitWidth : 0) : 0
+            implicitHeight: root.showMediaControls ? (mediaLoader.item ? mediaLoader.item.implicitHeight : 0) : 0
             width: (root.overlayEnabled && root.parentScreen) ? root.parentScreen.width : implicitWidth
             height: (root.overlayEnabled) ? root.barThickness : implicitHeight
             z: (root.overlayEnabled) ? 1000 : 0
@@ -892,8 +892,8 @@ PluginComponent {
 
     verticalBarPill: Component {
         Item {
-            implicitWidth: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitWidth : Theme.iconSize)
-            implicitHeight: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitHeight : Theme.iconSize)
+            implicitWidth: root.showMediaControls ? (mediaLoader.item ? mediaLoader.item.implicitWidth : 0) : 0
+            implicitHeight: root.showMediaControls ? (mediaLoader.item ? mediaLoader.item.implicitHeight : 0) : 0
             width: (root.overlayEnabled) ? root.barThickness : implicitWidth
             height: (root.overlayEnabled && root.parentScreen) ? root.parentScreen.height : implicitHeight
             z: (root.overlayEnabled) ? 1000 : 0
