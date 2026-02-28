@@ -524,18 +524,34 @@ PluginComponent {
                             enabled: playerAvailable
                             acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                             preventStealing: true
+                            property bool draggingSeek: false
+
+                            function seekAt(xPos) {
+                                if (!(root.textSeekbarEnabled && activePlayer && activePlayer.canSeek && activePlayer.length > 0))
+                                    return;
+                                const r = Math.max(0, Math.min(1, xPos / width));
+                                const pos = Math.min(r * activePlayer.length, activePlayer.length * 0.99);
+                                activePlayer.position = pos;
+                            }
 
                             onPressed: mouse => {
                                 if (mouse.button === Qt.LeftButton && root.textSeekbarEnabled && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
-                                    const r = Math.max(0, Math.min(1, mouse.x / width));
-                                    const pos = Math.min(r * activePlayer.length, activePlayer.length * 0.99);
-                                    activePlayer.position = pos;
+                                    draggingSeek = true;
+                                    seekAt(mouse.x);
                                     mouse.accepted = true;
                                     return;
                                 }
                                 root.handleMediaAction(mouse.button, textContainer);
                                 mouse.accepted = true;
                             }
+
+                            onPositionChanged: mouse => {
+                                if (pressed && draggingSeek)
+                                    seekAt(mouse.x);
+                            }
+
+                            onReleased: draggingSeek = false
+                            onCanceled: draggingSeek = false
                         }
                     }
                 }

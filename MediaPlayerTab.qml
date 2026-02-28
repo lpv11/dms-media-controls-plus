@@ -369,13 +369,49 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.verticalCenterOffset: parent.height * 0.2
 
-                        DankSeekbar {
+                        Item {
                             width: parent.width * 0.8
                             height: 20
                             anchors.horizontalCenter: parent.horizontalCenter
-                            activePlayer: root.activePlayer
-                            isSeeking: root.isSeeking
-                            onIsSeekingChanged: root.isSeeking = isSeeking
+
+                            DankSeekbar {
+                                anchors.fill: parent
+                                activePlayer: root.activePlayer
+                                isSeeking: root.isSeeking
+                                onIsSeekingChanged: root.isSeeking = isSeeking
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                acceptedButtons: Qt.LeftButton
+                                preventStealing: true
+                                enabled: activePlayer && activePlayer.canSeek && activePlayer.length > 0
+                                property bool draggingSeek: false
+
+                                function seekAt(xPos) {
+                                    if (!activePlayer || !activePlayer.canSeek || activePlayer.length <= 0)
+                                        return;
+                                    const r = Math.max(0, Math.min(1, xPos / width));
+                                    const clamped = Math.min(r * activePlayer.length, activePlayer.length * 0.99);
+                                    activePlayer.position = clamped;
+                                }
+
+                                onPressed: mouse => {
+                                    draggingSeek = true;
+                                    seekAt(mouse.x);
+                                    mouse.accepted = true;
+                                }
+
+                                onPositionChanged: mouse => {
+                                    if (pressed && draggingSeek)
+                                        seekAt(mouse.x);
+                                }
+
+                                onReleased: draggingSeek = false
+                                onCanceled: draggingSeek = false
+                            }
                         }
 
                         Item {
