@@ -2,9 +2,6 @@
 
 Media controls with configurable full-bar volume overlay behavior for Dank Material Shell.
 
-## Important
-It <big><strong><em>needs</em></strong></big> to be placed at the center otherwise only half the overlay will capture the bar for the volume scroll to work.
-
 ## Features
 - Media controls widget with track info and playback controls
 - Full Bar Overlay (optional)
@@ -22,7 +19,7 @@ It <big><strong><em>needs</em></strong></big> to be placed at the center otherwi
 ```bash
 git clone https://github.com/lpv11/dms-media-controls-plus.git ~/.config/DankMaterialShell/plugins/mediaControlsPlus
 ```
-In Settings -> Plugins click Scan, then enable the plugin and add the widget at the center of the bar from Settings -> Widgets.
+In Settings -> Plugins click Scan, then enable the plugin and add the widget from Settings -> Widgets.
 Restart dms with `dms restart` or from DMS power menu if it doesn't load.
 
 ## Settings screenshot

@@ -43,6 +43,7 @@ PluginSettings {
         onValueChanged: {
             if (!value) {
                 textSeekbarToggle.value = false
+                widgetAreaScrollSeekToggle.value = false
                 rightClickMediaTabToggle.value = false
             }
         }
@@ -55,6 +56,24 @@ PluginSettings {
         description: "Enable a seekbar under the track title area - can drag or click to seek on song title area."
         defaultValue: true
         enabled: showMediaControlsToggle.value
+    }
+
+    ToggleSetting {
+        id: widgetAreaScrollSeekToggle
+        settingKey: "widgetAreaScrollSeek"
+        label: "Widget Scroll To Seek"
+        description: "Use mouse wheel on Media Controls to seek the current song."
+        defaultValue: false
+        enabled: showMediaControlsToggle.value
+    }
+
+    StringSetting {
+        settingKey: "widgetScrollSeekStep"
+        label: "Scroll To Seek Step"
+        description: "Seek seconds per wheel notch for Widget Scroll To Seek (default: 5)."
+        placeholder: "5"
+        defaultValue: "5"
+        enabled: showMediaControlsToggle.value && widgetAreaScrollSeekToggle.value
     }
 
     ToggleSetting {

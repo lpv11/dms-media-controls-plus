@@ -25,6 +25,11 @@ PluginComponent {
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
     property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled !== false
+    property bool widgetAreaScrollSeekEnabled: showMediaControls && pluginData.widgetAreaScrollSeek === true
+    property int widgetScrollSeekStep: {
+        const n = Number(pluginData.widgetScrollSeekStep)
+        return Number.isFinite(n) && n > 0 ? Math.floor(n) : 5
+    }
     property bool rightClickOpensMediaTab: showMediaControls && pluginData.rightClickOpensMediaTab !== false
     property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
     pillClickAction: showMediaControls ? (() => {
@@ -49,6 +54,7 @@ PluginComponent {
     onShowMediaControlsChanged: {
         if (!showMediaControls) {
             pluginData.textSeekbarEnabled = false
+            pluginData.widgetAreaScrollSeek = false
             pluginData.rightClickOpensMediaTab = false
         }
     }
@@ -76,13 +82,27 @@ PluginComponent {
             return
 
         const sinkAudio = AudioService.sink?.audio
-        const currentVolumePct = sinkAudio ? Math.round(sinkAudio.volume * 100) : -1
-        const maxVol = AudioService.sinkMaxVolume
-        const atUpperLimit = !!sinkAudio && deltaY > 0 && currentVolumePct >= maxVol
-        const atLowerLimit = !!sinkAudio && deltaY < 0 && currentVolumePct <= 0
+        if (!sinkAudio) {
+            const cmd = deltaY > 0 ? "increment" : "decrement"
+            Quickshell.execDetached(["dms", "ipc", "call", "audio", cmd, step.toString()])
+            return
+        }
 
-        const cmd = deltaY > 0 ? "increment" : "decrement"
-        Quickshell.execDetached(["dms", "ipc", "call", "audio", cmd, step.toString()])
+        const currentVolumePct = Math.round(sinkAudio.volume * 100)
+        const configuredMax = Number(AudioService.sinkMaxVolume)
+        const maxVol = Number.isFinite(configuredMax) && configuredMax > 0 ? configuredMax : 100
+        const atUpperLimit = deltaY > 0 && currentVolumePct >= maxVol
+        const atLowerLimit = deltaY < 0 && currentVolumePct <= 0
+
+        if (!atUpperLimit && !atLowerLimit) {
+            const nextPct = Math.max(0, Math.min(maxVol, currentVolumePct + (deltaY > 0 ? step : -step)))
+            if (typeof AudioService.setVolume === "function")
+                AudioService.setVolume(nextPct)
+            else
+                sinkAudio.volume = nextPct / 100
+            if (sinkAudio.muted && nextPct > 0)
+                sinkAudio.muted = false
+        }
 
         if (showOsdAtLimits && (atUpperLimit || atLowerLimit))
             pulseVolumeOsd(atUpperLimit)
@@ -128,7 +148,28 @@ PluginComponent {
     }
 
     function toggleMute() {
+        if (typeof AudioService.toggleMute === "function") {
+            AudioService.toggleMute()
+            return
+        }
+        const sinkAudio = AudioService.sink?.audio
+        if (sinkAudio) {
+            sinkAudio.muted = !sinkAudio.muted
+            return
+        }
         Quickshell.execDetached(["dms", "ipc", "call", "audio", "mute"])
+    }
+
+    function seekByWheel(player, deltaY) {
+        if (!player || !player.canSeek || player.length <= 0 || deltaY === 0)
+            return false
+
+        const notchCount = Math.max(1, Math.round(Math.abs(deltaY) / 120))
+        const direction = deltaY > 0 ? 1 : -1
+        const currentPos = player.position || 0
+        const targetPos = currentPos + (direction * notchCount * widgetScrollSeekStep)
+        player.position = Math.max(0, Math.min(player.length * 0.99, targetPos))
+        return true
     }
 
     function currentBarPosition() {
@@ -158,7 +199,10 @@ PluginComponent {
         if (button === Qt.LeftButton) {
             playerctl(["play-pause"]);
         } else if (button === Qt.MiddleButton) {
-            playerctl(["previous"]);
+            if (overlayEnabled)
+                toggleMute();
+            else
+                playerctl(["previous"]);
         } else if (button === Qt.RightButton) {
             if (showMediaControls && rightClickOpensMediaTab) {
                 const currentScreen = parentScreen || Screen;
@@ -240,6 +284,17 @@ PluginComponent {
             width: implicitWidth
             height: implicitHeight
             opacity: (playerAvailable && root.showMediaControls) ? 1 : 0
+
+            WheelHandler {
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: event => {
+                    if (!(root.widgetAreaScrollSeekEnabled && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0)) {
+                        event.accepted = false;
+                        return;
+                    }
+                    event.accepted = root.seekByWheel(activePlayer, event.angleDelta.y)
+                }
+            }
 
             Behavior on opacity {
                 NumberAnimation {
@@ -441,7 +496,9 @@ PluginComponent {
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom
                             height: 2
-                            visible: root.textSeekbarEnabled && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
+                            // Keep progress feedback visible while widget scroll-to-seek is enabled,
+                            // even if title-area click/drag seek is disabled.
+                            visible: (root.textSeekbarEnabled || root.widgetAreaScrollSeekEnabled) && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
 
                             Rectangle {
                                 width: parent.width
@@ -552,6 +609,15 @@ PluginComponent {
 
                             onReleased: draggingSeek = false
                             onCanceled: draggingSeek = false
+
+                            onWheel: wheel => {
+                                if (!(root.widgetAreaScrollSeekEnabled && activePlayer && activePlayer.canSeek && activePlayer.length > 0)) {
+                                    wheel.accepted = false
+                                    return
+                                }
+                                wheel.accepted = root.seekByWheel(activePlayer, wheel.angleDelta.y)
+                            }
+
                         }
                     }
                 }
@@ -651,9 +717,9 @@ PluginComponent {
             id: overlay
             implicitWidth: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitWidth : Theme.iconSize)
             implicitHeight: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitHeight : Theme.iconSize)
-            width: root.overlayEnabled && root.parentScreen ? root.parentScreen.width : implicitWidth
-            height: root.overlayEnabled ? root.barThickness : implicitHeight
-            z: root.overlayEnabled ? 1000 : 0
+            width: (root.overlayEnabled && root.parentScreen) ? root.parentScreen.width : implicitWidth
+            height: (root.overlayEnabled) ? root.barThickness : implicitHeight
+            z: (root.overlayEnabled) ? 1000 : 0
 
             MouseArea {
                 anchors.fill: parent
@@ -663,6 +729,45 @@ PluginComponent {
                 onPressed: mouse => {
                     root.toggleMute();
                     mouse.accepted = true;
+                }
+            }
+
+            // Fallback full-bar capture for non-patched DMS core:
+            // use an oversized local hit area without changing pill implicit size/layout.
+            MouseArea {
+                enabled: root.overlayEnabled && !!root.parentScreen
+                visible: enabled
+                x: -(root.parentScreen ? root.parentScreen.width * 2 : 0)
+                y: (parent.height - root.barThickness) / 2
+                width: root.parentScreen ? root.parentScreen.width * 4 : 0
+                height: root.barThickness
+                acceptedButtons: Qt.MiddleButton
+                hoverEnabled: false
+                z: 2000
+
+                onPressed: mouse => {
+                    if (mouse.button === Qt.MiddleButton) {
+                        root.toggleMute()
+                        mouse.accepted = true
+                    }
+                }
+
+                onWheel: wheel => {
+                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled && mediaLoader.item) {
+                        const p = mapToItem(mediaLoader, wheel.x, wheel.y)
+                        if (p.x >= 0 && p.y >= 0 && p.x <= mediaLoader.width && p.y <= mediaLoader.height) {
+                            wheel.accepted = false
+                            return
+                        }
+                    }
+                    if (root.allowWorkspaceScroll) {
+                        wheel.accepted = false
+                        return
+                    }
+                    if (wheel.angleDelta.y === 0)
+                        return
+                    root.bump(wheel.angleDelta.y)
+                    wheel.accepted = true
                 }
             }
 
@@ -677,6 +782,10 @@ PluginComponent {
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
+                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled) {
+                        event.accepted = false
+                        return
+                    }
                     if (root.allowWorkspaceScroll) {
                         event.accepted = false
                         return
@@ -694,9 +803,9 @@ PluginComponent {
         Item {
             implicitWidth: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitWidth : Theme.iconSize)
             implicitHeight: (!root.showMediaControls && root.overlayEnabled) ? 1 : (mediaLoader.item ? mediaLoader.item.implicitHeight : Theme.iconSize)
-            width: root.overlayEnabled ? root.barThickness : implicitWidth
-            height: root.overlayEnabled && root.parentScreen ? root.parentScreen.height : implicitHeight
-            z: root.overlayEnabled ? 1000 : 0
+            width: (root.overlayEnabled) ? root.barThickness : implicitWidth
+            height: (root.overlayEnabled && root.parentScreen) ? root.parentScreen.height : implicitHeight
+            z: (root.overlayEnabled) ? 1000 : 0
 
             MouseArea {
                 anchors.fill: parent
@@ -706,6 +815,45 @@ PluginComponent {
                 onPressed: mouse => {
                     root.toggleMute();
                     mouse.accepted = true;
+                }
+            }
+
+            // Fallback full-bar capture for non-patched DMS core:
+            // use an oversized local hit area without changing pill implicit size/layout.
+            MouseArea {
+                enabled: root.overlayEnabled && !!root.parentScreen
+                visible: enabled
+                x: (parent.width - root.barThickness) / 2
+                y: -(root.parentScreen ? root.parentScreen.height * 2 : 0)
+                width: root.barThickness
+                height: root.parentScreen ? root.parentScreen.height * 4 : 0
+                acceptedButtons: Qt.MiddleButton
+                hoverEnabled: false
+                z: 2000
+
+                onPressed: mouse => {
+                    if (mouse.button === Qt.MiddleButton) {
+                        root.toggleMute()
+                        mouse.accepted = true
+                    }
+                }
+
+                onWheel: wheel => {
+                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled && mediaLoader.item) {
+                        const p = mapToItem(mediaLoader, wheel.x, wheel.y)
+                        if (p.x >= 0 && p.y >= 0 && p.x <= mediaLoader.width && p.y <= mediaLoader.height) {
+                            wheel.accepted = false
+                            return
+                        }
+                    }
+                    if (root.allowWorkspaceScroll) {
+                        wheel.accepted = false
+                        return
+                    }
+                    if (wheel.angleDelta.y === 0)
+                        return
+                    root.bump(wheel.angleDelta.y)
+                    wheel.accepted = true
                 }
             }
 
@@ -720,6 +868,10 @@ PluginComponent {
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
+                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled) {
+                        event.accepted = false
+                        return
+                    }
                     if (root.allowWorkspaceScroll) {
                         event.accepted = false
                         return
