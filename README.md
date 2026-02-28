@@ -12,7 +12,7 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Scroll Step (configurable)
 - Left-click play/pause toggle
 - Middle-click mute toggle on overlay/widget area
-- (Info) When media controls are enabled, clicking at the very top of the widget will always make it toggle play/pause even with seekbar enabled. That makes it easier to click using DankBar with 0 Edge Spacing. Also same happens if you click at the very bottom of the widget. That I don't know if I'll bother to fix.
+- (Info) When media controls are enabled, clicking or scrolling at the very top(and bottom) of the widget will always make it toggle play/pause or mute even with seekbar & widget scroll to seek enabled. That makes it easier to click using DankBar with 0 Edge Spacing. That is a bug on purpose, although I'd prefer it didn't happen for the bottom side but don't know if I'll bother to "fix".
 
 ## Manual Installation
 
