@@ -31,7 +31,7 @@ PluginSettings {
                 allowWorkspaceScrollToggle.value = false
                 fullOverlayToggle.value = true
                 showMediaControlsToggle.value = true
-                textSeekbarToggle.value = true
+                textSeekbarToggle.value = false
                 seekbarVisualFeedbackToggle.value = false
                 widgetAreaScrollSeekToggle.value = false
                 widgetScrollSeekStepSetting.value = widgetScrollSeekStepSetting.defaultValue
@@ -80,8 +80,8 @@ PluginSettings {
         id: textSeekbarToggle
         settingKey: "textSeekbarEnabled"
         label: "Title Area Seekbar"
-        description: "Enable a seekbar under the track title area - can drag or click to seek on song title area."
-        defaultValue: true
+        description: "Enable a seekbar on the track title area - ........"
+        defaultValue: false
         enabled: showMediaControlsToggle.value
     }
 
@@ -118,7 +118,7 @@ PluginSettings {
         settingKey: "rightClickOpensMediaTab"
         label: "Right Click Opens Media Tab"
         description: "When enabled, right-click on the widget/title area opens media controls popout content."
-        defaultValue: true
+        defaultValue: false
         enabled: showMediaControlsToggle.value
     }
 

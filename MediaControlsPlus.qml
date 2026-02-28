@@ -25,7 +25,7 @@ PluginComponent {
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
-    property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled !== false
+    property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled === true
     property bool seekbarVisualFeedbackEnabled: showMediaControls && pluginData.seekbarVisualFeedback === true
     property bool widgetAreaScrollSeekEnabled: showMediaControls && pluginData.widgetAreaScrollSeek === true
     property int widgetScrollSeekStep: {
