@@ -14,7 +14,6 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Allow Workspace Scroll (optional): restores default DankBar workspace wheel behavior
 - Show Volume OSD At Limits (optional): still shows OSD when scrolling at 0% or max volume
 - Scroll Step (configurable): volume change per wheel notch
-- Restore Defaults button in settings
 
 ## Known Bugs
 - Seekbar feedback totally misbehaves unless it's clicked on, don't know how to fix. I would appreciate help on this one.

@@ -589,7 +589,7 @@ PluginComponent {
                             height: 2
                             // Keep progress feedback visible while widget scroll-to-seek is enabled,
                             // even if title-area click/drag seek is disabled.
-                            visible: root.seekbarVisualFeedbackEnabled && (root.textSeekbarEnabled || root.widgetAreaScrollSeekEnabled) && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
+                            visible: root.seekbarVisualFeedbackEnabled && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0
 
                             Rectangle {
                                 width: parent.width
