@@ -32,7 +32,7 @@ PluginSettings {
                 fullOverlayToggle.value = true
                 showMediaControlsToggle.value = true
                 textSeekbarToggle.value = true
-                seekbarVisualFeedbackToggle.value = true
+                seekbarVisualFeedbackToggle.value = false
                 widgetAreaScrollSeekToggle.value = false
                 widgetScrollSeekStepSetting.value = widgetScrollSeekStepSetting.defaultValue
                 rightClickMediaTabToggle.value = true
@@ -90,7 +90,7 @@ PluginSettings {
         settingKey: "seekbarVisualFeedback"
         label: "Seekbar Visual Feedback"
         description: "Show seekbar progress under the title area. Doesn't work well."
-        defaultValue: true
+        defaultValue: false
         enabled: showMediaControlsToggle.value
     }
 

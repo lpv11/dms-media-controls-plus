@@ -26,7 +26,7 @@ PluginComponent {
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
     property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled !== false
-    property bool seekbarVisualFeedbackEnabled: showMediaControls && pluginData.seekbarVisualFeedback !== false
+    property bool seekbarVisualFeedbackEnabled: showMediaControls && pluginData.seekbarVisualFeedback === true
     property bool widgetAreaScrollSeekEnabled: showMediaControls && pluginData.widgetAreaScrollSeek === true
     property int widgetScrollSeekStep: {
         const n = Number(pluginData.widgetScrollSeekStep)
