@@ -86,19 +86,19 @@ PluginSettings {
     }
 
     ToggleSetting {
-        id: textSeekbarToggle
-        settingKey: "textSeekbarEnabled"
-        label: "Title Area Seekbar"
-        description: "Enable a seekbar on the track title area - can drag or click to seek on song title area."
+        id: seekbarVisualFeedbackToggle
+        settingKey: "seekbarVisualFeedback"
+        label: "Seekbar Visual Feedback"
+        description: "Show seekbar progress under the title area. Doesn't work well."
         defaultValue: false
         enabled: showMediaControlsToggle.value
     }
 
     ToggleSetting {
-        id: seekbarVisualFeedbackToggle
-        settingKey: "seekbarVisualFeedback"
-        label: "Seekbar Visual Feedback"
-        description: "Show seekbar progress under the title area. Doesn't work well."
+        id: textSeekbarToggle
+        settingKey: "textSeekbarEnabled"
+        label: "Title Area Seekbar"
+        description: "Enable a seekbar on the track title area - can drag or click to seek on song title area."
         defaultValue: false
         enabled: showMediaControlsToggle.value
     }
