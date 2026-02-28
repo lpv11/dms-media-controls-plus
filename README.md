@@ -1,3 +1,5 @@
+# Help : See Known Bugs
+
 # Media Controls Plus
 
 Media controls with configurable full-bar volume overlay behavior for Dank Material Shell.
