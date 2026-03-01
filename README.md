@@ -10,7 +10,7 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Show Media Controls (optional): disable to run as volume overlay only
 - Right Click Opens Media Tab (optional): opens media-only popout content (without tabs)
 - Seekbar Visual Feedback (optional): shows seekbar progress under the title area
-- Defaults: Title Area Seekbar and Seekbar Visual Feedback are enabled
+- Defaults: Title Area Seekbar and Seekbar Visual Feedback are disabled
 - Title Area Seekbar (optional): click or drag under title area to seek
 - Widget Scroll To Seek (optional): use mouse wheel on media controls to seek
 - Scroll To Seek Step (configurable): seconds per wheel notch for Widget Scroll To Seek
