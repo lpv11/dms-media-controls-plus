@@ -16,6 +16,7 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Allow Workspace Scroll (optional): restores default DankBar workspace wheel behavior
 - Show Volume OSD At Limits (optional): still shows OSD when scrolling at 0% or max volume
 - Scroll Step (configurable): volume change per wheel notch
+- Scroll Volume Sound Feedback (optional): plays volume feedback sound while scrolling volume (applied only when no active media player is playing)
 
 ## Known Bugs
 Seekbar Visual Feedback at least on Firefox browser won't update on song changes and I can't figure out how to fix it so I chose to disable all the seekbar options by default. Works fine for local players. I'd appreciate any help on how to fix the Firefox/Browser issue.
