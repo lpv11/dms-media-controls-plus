@@ -38,6 +38,7 @@ PluginSettings {
                 widgetScrollSeekStepSetting.value = widgetScrollSeekStepSetting.defaultValue
                 rightClickMediaTabToggle.value = true
                 volumeScrollStepSetting.value = volumeScrollStepSetting.defaultValue
+                scrollVolumeSoundFeedbackToggle.value = false
                 showOsdAtLimitsToggle.value = true
             }
         }
@@ -158,6 +159,14 @@ PluginSettings {
         description: "Volume change per scroll tick (default: 5)"
         placeholder: "5"
         defaultValue: "5"
+    }
+
+    ToggleSetting {
+        id: scrollVolumeSoundFeedbackToggle
+        settingKey: "scrollVolumeSoundFeedback"
+        label: "Scroll Volume Sound Feedback"
+        description: "Play volume change sound while scrolling volume. Works only when no active media player is playing."
+        defaultValue: false
     }
 
     ToggleSetting {

@@ -27,6 +27,7 @@ PluginComponent {
     property bool showMediaControls: pluginData.showMediaControls !== false
     property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
     property bool middleClickMuteEnabled: overlayEnabled && pluginData.middleClickMute !== false
+    property bool scrollVolumeSoundFeedbackEnabled: pluginData.scrollVolumeSoundFeedback === true
     property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled === true
     property bool seekbarVisualFeedbackEnabled: showMediaControls && pluginData.seekbarVisualFeedback === true
     property bool widgetAreaScrollSeekEnabled: showMediaControls && pluginData.widgetAreaScrollSeek === true
@@ -85,6 +86,8 @@ PluginComponent {
         if (deltaY === 0)
             return
 
+        suppressScrollVolumeFeedback()
+
         const sinkAudio = AudioService.sink?.audio
         if (!sinkAudio) {
             const cmd = deltaY > 0 ? "increment" : "decrement"
@@ -113,6 +116,22 @@ PluginComponent {
     }
 
     property real _volumeRestoreValue: -1
+    property bool _scrollFeedbackSuppressionActive: false
+    property bool _scrollFeedbackPreviousMuted: false
+
+    function suppressScrollVolumeFeedback() {
+        if (scrollVolumeSoundFeedbackEnabled)
+            return
+        if (typeof AudioService.notificationsAudioMuted !== "boolean")
+            return
+
+        if (!_scrollFeedbackSuppressionActive) {
+            _scrollFeedbackPreviousMuted = AudioService.notificationsAudioMuted
+            _scrollFeedbackSuppressionActive = true
+        }
+        AudioService.notificationsAudioMuted = true
+        scrollFeedbackRestoreTimer.restart()
+    }
 
     function pulseVolumeOsd(atUpperLimit) {
         const sinkAudio = AudioService.sink?.audio
@@ -142,6 +161,18 @@ PluginComponent {
                 return
             sinkAudio.volume = root._volumeRestoreValue
             root._volumeRestoreValue = -1
+        }
+    }
+
+    Timer {
+        id: scrollFeedbackRestoreTimer
+        interval: 220
+        repeat: false
+        onTriggered: {
+            if (!root._scrollFeedbackSuppressionActive)
+                return
+            AudioService.notificationsAudioMuted = root._scrollFeedbackPreviousMuted
+            root._scrollFeedbackSuppressionActive = false
         }
     }
 
