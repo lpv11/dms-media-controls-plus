@@ -31,7 +31,7 @@ Restart dms with `dms restart` or from DMS power menu if it doesn't load.
 
 ## Settings screenshot
 
-![Alt text](https://github.com/lpv11/dms-media-controls-plus/blob/main/screenshot.png?raw=true "")
+![Alt text](https://github.com/lpv11/dms-media-controls-plus/blob/main/screenshot.png?raw=true&v=20260301 "")
 
 ## License
 MIT
