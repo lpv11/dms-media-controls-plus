@@ -6,6 +6,19 @@ import qs.Modules.Plugins
 PluginSettings {
     id: root
     pluginId: "mediaControlsPlus"
+    property bool fullOverlayNeedsAttention: false
+
+    function flashFullOverlayRequirement() {
+        fullOverlayNeedsAttention = true
+        fullOverlayAttentionTimer.restart()
+    }
+
+    Timer {
+        id: fullOverlayAttentionTimer
+        interval: 2000
+        repeat: false
+        onTriggered: root.fullOverlayNeedsAttention = false
+    }
 
     Item {
         width: parent.width
@@ -54,14 +67,18 @@ PluginSettings {
     ToggleSetting {
         id: fullOverlayToggle
         settingKey: "fullOverlay"
-        label: "Full Bar Overlay"
-        description: "Captures scroll and/or middle-clicks across the entire bar area to change volume and/or mute when enabled. It will disable workspace scroll and middle-click events you may have on the bar."
+        label: root.fullOverlayNeedsAttention ? "Full Bar Overlay (Required)" : "Full Bar Overlay"
+        description: "Captures scroll and/or middle-clicks across the entire bar area to change volume and/or mute when enabled. It will disable any mouse scroll and middle-click events you may have on the bar such as workspace scroll."
         defaultValue: true
         onValueChanged: {
             if (value && !volumeScrollToggle.value)
                 volumeScrollToggle.value = true
+            if (value && !middleClickMuteToggle.value)
+                middleClickMuteToggle.value = true
             if (!value && volumeScrollToggle.value)
                 volumeScrollToggle.value = false
+            if (!value && middleClickMuteToggle.value)
+                middleClickMuteToggle.value = false
         }
     }
 
@@ -71,7 +88,12 @@ PluginSettings {
         label: "Volume Scroll"
         description: "Use mouse wheel to change volume on the bar. Requires Full Bar Overlay enabled."
         defaultValue: true
-        enabled: fullOverlayToggle.value
+        onValueChanged: {
+            if (value && !fullOverlayToggle.value) {
+                value = false
+                root.flashFullOverlayRequirement()
+            }
+        }
     }
 
     StringSetting {
@@ -90,7 +112,12 @@ PluginSettings {
         label: "Middle Click Mute"
         description: "Middle-click the bar to mute audio. Requires Full Bar Overlay enabled."
         defaultValue: true
-        enabled: fullOverlayToggle.value
+        onValueChanged: {
+            if (value && !fullOverlayToggle.value) {
+                value = false
+                root.flashFullOverlayRequirement()
+            }
+        }
     }
 
     Rectangle {
