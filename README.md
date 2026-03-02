@@ -4,6 +4,11 @@
 
 Media controls with configurable full-bar volume overlay behavior for Dank Material Shell.
 
+## Warning
+
+It will overwrite any default actions your Dank bar has 
+with the actions you have enabled. E.g. enabling volume scroll routes mouse wheel input to volume control. Middle-click to mute can override other middle-click actions on the bar.
+
 ## Features
 - Full media controls widget with track info and playback controls
 - Full Bar Overlay (optional): scroll to change volume anywhere on the bar, middle-click mutes
@@ -15,7 +20,6 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Widget Scroll To Seek (optional): use mouse wheel on media controls to seek
 - Edge input behavior: with Widget Scroll To Seek or Title Area Seekbar enabled, mouse input at the very top or bottom of the widget area still follows default bar actions and ignores widget-specific seek settings. E.g. left click toggles play/pause & scroll wheel adjusts volume.
 - Scroll To Seek Step (configurable): seconds per wheel notch for Widget Scroll To Seek
-- Allow Workspace Scroll (optional): restores default DankBar workspace wheel behavior
 - Show Volume OSD At Limits (optional): still shows OSD when scrolling at 0% or max volume
 - Scroll Step (configurable): volume change per wheel notch
 - Scroll Volume Sound Feedback (optional): plays volume feedback sound while scrolling volume (applied only when no active media player is playing)

@@ -22,10 +22,10 @@ PluginComponent {
     }
 
     property bool fullOverlay: pluginData.fullOverlay !== false
+    property bool volumeScrollEnabled: fullOverlay && pluginData.volumeScroll !== false
     property bool hideWhenNoMusic: true
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
-    property bool allowWorkspaceScroll: pluginData.allowWorkspaceScroll === true
     property bool middleClickMuteEnabled: overlayEnabled && pluginData.middleClickMute !== false
     property bool scrollVolumeSoundFeedbackEnabled: pluginData.scrollVolumeSoundFeedback === true
     property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled === true
@@ -36,7 +36,7 @@ PluginComponent {
         return Number.isFinite(n) && n > 0 ? Math.floor(n) : 10
     }
     property bool rightClickOpensMediaTab: showMediaControls && pluginData.rightClickOpensMediaTab !== false
-    property bool overlayEnabled: fullOverlay && !allowWorkspaceScroll
+    property bool overlayEnabled: fullOverlay
     pillClickAction: showMediaControls ? (() => {
         togglePlayPause();
     }) : null
@@ -45,15 +45,9 @@ PluginComponent {
             toggleMediaOnlyPopout(x, y, width, section, screen)
     }
 
-    // Keep settings mutually exclusive in storage so toggles reflect reality.
-    onAllowWorkspaceScrollChanged: {
-        if (allowWorkspaceScroll && fullOverlay)
-            pluginData.fullOverlay = false
-    }
-
     onFullOverlayChanged: {
-        if (fullOverlay && allowWorkspaceScroll)
-            pluginData.allowWorkspaceScroll = false
+        if (!fullOverlay && pluginData.volumeScroll !== false)
+            pluginData.volumeScroll = false
     }
 
     onShowMediaControlsChanged: {
@@ -937,16 +931,16 @@ PluginComponent {
                 }
 
                 onWheel: wheel => {
+                    if (!root.volumeScrollEnabled) {
+                        wheel.accepted = false
+                        return
+                    }
                     if (root.showMediaControls && root.widgetAreaScrollSeekEnabled && mediaLoader.item) {
                         const p = mapToItem(mediaLoader, wheel.x, wheel.y)
                         if (p.x >= 0 && p.y >= 0 && p.x <= mediaLoader.width && p.y <= mediaLoader.height) {
                             wheel.accepted = false
                             return
                         }
-                    }
-                    if (root.allowWorkspaceScroll) {
-                        wheel.accepted = false
-                        return
                     }
                     if (wheel.angleDelta.y === 0)
                         return
@@ -966,11 +960,11 @@ PluginComponent {
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
-                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled) {
+                    if (!root.volumeScrollEnabled) {
                         event.accepted = false
                         return
                     }
-                    if (root.allowWorkspaceScroll) {
+                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled) {
                         event.accepted = false
                         return
                     }
@@ -1023,16 +1017,16 @@ PluginComponent {
                 }
 
                 onWheel: wheel => {
+                    if (!root.volumeScrollEnabled) {
+                        wheel.accepted = false
+                        return
+                    }
                     if (root.showMediaControls && root.widgetAreaScrollSeekEnabled && mediaLoader.item) {
                         const p = mapToItem(mediaLoader, wheel.x, wheel.y)
                         if (p.x >= 0 && p.y >= 0 && p.x <= mediaLoader.width && p.y <= mediaLoader.height) {
                             wheel.accepted = false
                             return
                         }
-                    }
-                    if (root.allowWorkspaceScroll) {
-                        wheel.accepted = false
-                        return
                     }
                     if (wheel.angleDelta.y === 0)
                         return
@@ -1052,11 +1046,11 @@ PluginComponent {
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
-                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled) {
+                    if (!root.volumeScrollEnabled) {
                         event.accepted = false
                         return
                     }
-                    if (root.allowWorkspaceScroll) {
+                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled) {
                         event.accepted = false
                         return
                     }

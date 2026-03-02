@@ -28,8 +28,8 @@ PluginSettings {
             text: "Restore Defaults"
             iconName: "restart_alt"
             onClicked: {
-                allowWorkspaceScrollToggle.value = false
                 fullOverlayToggle.value = true
+                volumeScrollToggle.value = true
                 middleClickMuteToggle.value = true
                 showMediaControlsToggle.value = true
                 textSeekbarToggle.value = false
@@ -55,28 +55,56 @@ PluginSettings {
         id: fullOverlayToggle
         settingKey: "fullOverlay"
         label: "Full Bar Overlay"
-        description: "Capture scroll across the entire bar area to change volume. When enabled, 'Allow Workspace Scroll' is disabled."
+        description: "Captures scroll and/or middle-clicks across the entire bar area to change volume and/or mute when enabled. It will disable workspace scroll and middle-click events you may have on the bar."
         defaultValue: true
         onValueChanged: {
-            if (value && allowWorkspaceScrollToggle.value)
-                allowWorkspaceScrollToggle.value = false
+            if (value && !volumeScrollToggle.value)
+                volumeScrollToggle.value = true
+            if (!value && volumeScrollToggle.value)
+                volumeScrollToggle.value = false
         }
+    }
+
+    ToggleSetting {
+        id: volumeScrollToggle
+        settingKey: "volumeScroll"
+        label: "Volume Scroll"
+        description: "Use mouse wheel to change volume on the bar. Requires Full Bar Overlay enabled."
+        defaultValue: true
+        enabled: fullOverlayToggle.value
+    }
+
+    StringSetting {
+        id: volumeScrollStepSetting
+        settingKey: "step"
+        label: "Scroll Step"
+        description: "Volume change per scroll tick (default: 5)"
+        placeholder: "5"
+        defaultValue: "5"
+        enabled: fullOverlayToggle.value && volumeScrollToggle.value
     }
 
     ToggleSetting {
         id: middleClickMuteToggle
         settingKey: "middleClickMute"
         label: "Middle Click Mute"
-        description: "Middle-click the bar to mute audio."
+        description: "Middle-click the bar to mute audio. Requires Full Bar Overlay enabled."
         defaultValue: true
         enabled: fullOverlayToggle.value
+    }
+
+    Rectangle {
+        width: parent.width
+        height: 1
+        color: Theme.outline
+        opacity: 0.3
     }
 
     ToggleSetting {
         id: showMediaControlsToggle
         settingKey: "showMediaControls"
         label: "Show Media Controls"
-        description: "Show media controls widget. Full Bar Overlay can be enabled without it."
+        description: "Show media controls widget."
         defaultValue: true
         onValueChanged: {
             if (!value) {
@@ -133,18 +161,6 @@ PluginSettings {
         enabled: showMediaControlsToggle.value && widgetAreaScrollSeekToggle.value
     }
 
-    ToggleSetting {
-        id: allowWorkspaceScrollToggle
-        settingKey: "allowWorkspaceScroll"
-        label: "Allow Workspace Scroll"
-        description: "Use default DankBar wheel behavior (workspace scroll) instead of volume scrolling. When enabled, Full Bar Overlay is disabled."
-        defaultValue: false
-        onValueChanged: {
-            if (value && fullOverlayToggle.value)
-                fullOverlayToggle.value = false
-        }
-    }
-
     Rectangle {
         width: parent.width
         height: 1
@@ -152,20 +168,11 @@ PluginSettings {
         opacity: 0.3
     }
 
-    StringSetting {
-        id: volumeScrollStepSetting
-        settingKey: "step"
-        label: "Scroll Step"
-        description: "Volume change per scroll tick (default: 5)"
-        placeholder: "5"
-        defaultValue: "5"
-    }
-
     ToggleSetting {
         id: scrollVolumeSoundFeedbackToggle
         settingKey: "scrollVolumeSoundFeedback"
         label: "Scroll Volume Sound Feedback"
-        description: "Play volume change sound while scrolling volume. Works only when no active media player is playing."
+        description: "Play volume change sound while scrolling volume. Applied only when no active media player is playing."
         defaultValue: false
     }
 
