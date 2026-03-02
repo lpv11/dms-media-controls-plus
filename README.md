@@ -12,6 +12,7 @@ with the actions you have enabled. E.g. enabling volume scroll routes mouse whee
 ## Features
 - Full media controls widget with track info and playback controls
 - Full Bar Overlay (optional): scroll to change volume anywhere on the bar, middle-click mutes
+- Volume Scroll (optional): use mouse wheel on the bar to change volume (requires Full Bar Overlay enabled)
 - Show Media Controls (optional): disable to run as volume overlay only
 - Right Click Opens Media Tab (optional): opens media-only popout content (without tabs).
 - Seekbar Visual Feedback (optional): shows seekbar progress under the title area
