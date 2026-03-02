@@ -20,7 +20,8 @@ Media controls with configurable full-bar volume overlay behavior for Dank Mater
 - Scroll Volume Sound Feedback (optional): plays volume feedback sound while scrolling volume (applied only when no active media player is playing)
 
 ## Known Bugs
-Seekbar Visual Feedback is unreliable with Firefox (and possibly other browser MPRIS players): position can be wrong after DMS restart or track changes, and may only correct after manual seek interaction.
+- Seekbar Visual Feedback is unreliable with Firefox (and possibly other browser MPRIS players): position can be wrong after DMS restart or track changes, and may only correct after manual seek interaction.
+- Right Click Opens Media Tab can also misbehave with Firefox/browser MPRIS: next/previous may not work reliably, and behavior can get confused when two MPRIS players are active.
 
 ## Manual Installation
 
