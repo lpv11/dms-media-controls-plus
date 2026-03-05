@@ -6,6 +6,7 @@ import qs.Common
 import qs.Widgets
 import qs.Modules.Plugins
 import qs.Modules.DankBar.Widgets as BarWidgets
+import qs.Modules.DankDash as DashModules
 import qs.Services
 
 PluginComponent {
@@ -75,6 +76,37 @@ PluginComponent {
 
     visibilityCommand: hideWhenNoMusic ? "/usr/bin/playerctl -a status 2>/dev/null | grep -Eq '^(Playing|Paused)$'" : ""
     visibilityInterval: hideWhenNoMusic ? 2 : 0
+
+    function handleTopEdgeWheel(deltaY) {
+        if (!overlayEnabled || !volumeScrollEnabled || deltaY === 0)
+            return false
+        bump(deltaY)
+        return true
+    }
+
+    Connections {
+        target: PluginService
+        function onGlobalVarChanged(pluginId, varName) {
+            if (pluginId !== "mediaControlsPlus")
+                return
+            if (varName === "topEdgeWheelEvent") {
+                const payload = PluginService.getGlobalVar("mediaControlsPlus", "topEdgeWheelEvent", null)
+                if (!payload || !payload.deltaY)
+                    return
+                if (payload.screenName && root.parentScreen && payload.screenName !== root.parentScreen.name)
+                    return
+                root.handleTopEdgeWheel(payload.deltaY)
+                return
+            }
+            if (varName === "topEdgeMiddleClickEvent") {
+                const payload = PluginService.getGlobalVar("mediaControlsPlus", "topEdgeMiddleClickEvent", null)
+                if (payload && payload.screenName && root.parentScreen && payload.screenName !== root.parentScreen.name)
+                    return
+                if (root.overlayEnabled && root.middleClickMuteEnabled)
+                    root.toggleMute()
+            }
+        }
+    }
 
     function bump(deltaY) {
         if (deltaY === 0)
@@ -312,7 +344,96 @@ PluginComponent {
         layerNamespace: "dms:dash-media-only"
         popupWidth: 700
         popupHeight: contentLoader.item ? contentLoader.item.implicitHeight : 410
-        onBackgroundClicked: close()
+        property var __mediaTabRef: null
+        property int __dropdownType: 0
+        property point __dropdownAnchor: Qt.point(0, 0)
+        property bool __dropdownRightEdge: false
+        property var __dropdownPlayer: null
+        property var __dropdownPlayers: []
+
+        function __showVolumeDropdown(pos, rightEdge, player, players) {
+            __dropdownAnchor = pos
+            __dropdownRightEdge = rightEdge
+            __dropdownPlayer = player
+            __dropdownPlayers = players
+            __dropdownType = 1
+        }
+
+        function __showAudioDevicesDropdown(pos, rightEdge) {
+            __dropdownAnchor = pos
+            __dropdownRightEdge = rightEdge
+            __dropdownType = 2
+        }
+
+        function __showPlayersDropdown(pos, rightEdge, player, players) {
+            __dropdownAnchor = pos
+            __dropdownRightEdge = rightEdge
+            __dropdownPlayer = player
+            __dropdownPlayers = players
+            __dropdownType = 3
+        }
+
+        function __hideDropdowns() {
+            __volumeCloseTimer.stop()
+            __dropdownType = 0
+            __mediaTabRef?.resetDropdownStates()
+        }
+
+        function __startCloseTimer() {
+            __volumeCloseTimer.restart()
+        }
+
+        function __stopCloseTimer() {
+            __volumeCloseTimer.stop()
+        }
+
+        Timer {
+            id: __volumeCloseTimer
+            interval: 400
+            onTriggered: {
+                if (mediaOnlyPopout.__dropdownType === 1)
+                    mediaOnlyPopout.__hideDropdowns()
+            }
+        }
+
+        overlayContent: Component {
+            DashModules.MediaDropdownOverlay {
+                dropdownType: mediaOnlyPopout.__dropdownType
+                anchorPos: mediaOnlyPopout.__dropdownAnchor
+                isRightEdge: mediaOnlyPopout.__dropdownRightEdge
+                activePlayer: mediaOnlyPopout.__dropdownPlayer
+                allPlayers: mediaOnlyPopout.__dropdownPlayers
+                onCloseRequested: mediaOnlyPopout.__hideDropdowns()
+                onPanelEntered: mediaOnlyPopout.__stopCloseTimer()
+                onPanelExited: mediaOnlyPopout.__startCloseTimer()
+                onVolumeChanged: volume => {
+                    const player = mediaOnlyPopout.__dropdownPlayer
+                    const isChrome = player?.identity?.toLowerCase().includes("chrome")
+                                     || player?.identity?.toLowerCase().includes("chromium")
+                    const usePlayerVolume = player && player.volumeSupported && !isChrome
+                    if (usePlayerVolume) {
+                        player.volume = volume
+                    } else if (AudioService.sink?.audio) {
+                        AudioService.sink.audio.volume = volume
+                    }
+                }
+                onPlayerSelected: player => {
+                    const currentPlayer = MprisController.activePlayer
+                    if (currentPlayer && currentPlayer !== player && currentPlayer.canPause)
+                        currentPlayer.pause()
+                    MprisController.activePlayer = player
+                    mediaOnlyPopout.__hideDropdowns()
+                }
+                onDeviceSelected: () => {
+                    mediaOnlyPopout.__hideDropdowns()
+                }
+            }
+        }
+
+        onBackgroundClicked: {
+            __hideDropdowns()
+            close()
+        }
         content: Component {
             MediaPlayerTab {
                 targetScreen: mediaOnlyPopout.screen
@@ -323,6 +444,18 @@ PluginComponent {
                 contentOffsetY: Theme.spacingM + Theme.spacingXS
                 section: mediaOnlyPopout.triggerSection
                 barPosition: mediaOnlyPopout.effectiveBarPosition
+                Component.onCompleted: mediaOnlyPopout.__mediaTabRef = this
+                onShowVolumeDropdown: (pos, screen, rightEdge, player, players) => {
+                    mediaOnlyPopout.__showVolumeDropdown(pos, rightEdge, player, players)
+                }
+                onShowAudioDevicesDropdown: (pos, screen, rightEdge) => {
+                    mediaOnlyPopout.__showAudioDevicesDropdown(pos, rightEdge)
+                }
+                onShowPlayersDropdown: (pos, screen, rightEdge, player, players) => {
+                    mediaOnlyPopout.__showPlayersDropdown(pos, rightEdge, player, players)
+                }
+                onHideDropdowns: mediaOnlyPopout.__hideDropdowns()
+                onVolumeButtonExited: mediaOnlyPopout.__startCloseTimer()
             }
         }
     }
