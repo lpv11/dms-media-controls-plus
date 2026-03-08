@@ -8,6 +8,7 @@ PluginSettings {
     pluginId: "mediaControlsPlus"
     property bool volumeScrollReadDescFlash: false
     property bool middleClickMuteReadDescFlash: false
+    property bool showMediaControlsRequiredFlash: false
 
     Timer {
         id: volumeScrollReadDescTimer
@@ -21,6 +22,13 @@ PluginSettings {
         interval: 2000
         repeat: false
         onTriggered: root.middleClickMuteReadDescFlash = false
+    }
+
+    Timer {
+        id: showMediaControlsRequiredTimer
+        interval: 2000
+        repeat: false
+        onTriggered: root.showMediaControlsRequiredFlash = false
     }
 
     Item {
@@ -105,11 +113,9 @@ PluginSettings {
         onValueChanged: {
             if (value && !volumeScrollToggle.value)
                 volumeScrollToggle.value = true
-            if (value && !middleClickMuteToggle.value)
-                middleClickMuteToggle.value = true
             if (!value && volumeScrollToggle.value)
                 volumeScrollToggle.value = false
-            if (!value && !widgetOnlyVolumeScrollToggle.value && middleClickMuteToggle.value)
+            if (!value && !showMediaControlsToggle.value && middleClickMuteToggle.value)
                 middleClickMuteToggle.value = false
         }
     }
@@ -130,11 +136,38 @@ PluginSettings {
     }
 
     ToggleSetting {
+        id: showMediaControlsToggle
+        settingKey: "showMediaControls"
+        label: root.showMediaControlsRequiredFlash ? "Show Media Controls (Required)" : "Show Media Controls"
+        description: "Show media controls widget."
+        defaultValue: true
+        onValueChanged: {
+            if (!value) {
+                widgetOnlyVolumeScrollToggle.value = false
+                widgetMiddleClickNextSongToggle.value = false
+                seekbarVisualFeedbackToggle.value = false
+                textSeekbarToggle.value = false
+                widgetAreaScrollSeekToggle.value = false
+                rightClickMediaTabToggle.value = false
+                if (!fullOverlayToggle.value && middleClickMuteToggle.value)
+                    middleClickMuteToggle.value = false
+            }
+        }
+    }
+
+    ToggleSetting {
         id: widgetOnlyVolumeScrollToggle
         settingKey: "widgetOnlyVolumeScroll"
         label: "Widget Volume Control"
         description: "Use mouse wheel and middle-click on the entire Media Controls widget area to change volume and mute. Works without Full Bar Overlay."
         defaultValue: false
+        onValueChanged: {
+            if (value && !showMediaControlsToggle.value) {
+                root.showMediaControlsRequiredFlash = true
+                showMediaControlsRequiredTimer.restart()
+                value = false
+            }
+        }
     }
 
     ToggleSetting {
@@ -143,8 +176,13 @@ PluginSettings {
         label: "Widget Middle Click Next Song"
         description: "Use middle-click on widget area for next song."
         defaultValue: false
-        enabled: showMediaControlsToggle.value
         onValueChanged: {
+            if (value && !showMediaControlsToggle.value) {
+                root.showMediaControlsRequiredFlash = true
+                showMediaControlsRequiredTimer.restart()
+                value = false
+                return
+            }
             if (value && middleClickMuteToggle.value)
                 middleClickMuteToggle.value = false
         }
@@ -183,21 +221,6 @@ PluginSettings {
         height: 1
         color: Theme.outline
         opacity: 0.3
-    }
-
-    ToggleSetting {
-        id: showMediaControlsToggle
-        settingKey: "showMediaControls"
-        label: "Show Media Controls"
-        description: "Show media controls widget."
-        defaultValue: true
-        onValueChanged: {
-            if (!value) {
-                textSeekbarToggle.value = false
-                widgetAreaScrollSeekToggle.value = false
-                rightClickMediaTabToggle.value = false
-            }
-        }
     }
 
     ToggleSetting {
