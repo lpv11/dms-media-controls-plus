@@ -6,23 +6,26 @@ import qs.Modules.Plugins
 PluginSettings {
     id: root
     pluginId: "mediaControlsPlus"
-    property bool fullOverlayNeedsAttention: false
+    property bool volumeScrollReadDescFlash: false
+    property bool middleClickMuteReadDescFlash: false
 
-    function flashFullOverlayRequirement() {
-        fullOverlayNeedsAttention = true
-        fullOverlayAttentionTimer.restart()
+    Timer {
+        id: volumeScrollReadDescTimer
+        interval: 2000
+        repeat: false
+        onTriggered: root.volumeScrollReadDescFlash = false
     }
 
     Timer {
-        id: fullOverlayAttentionTimer
+        id: middleClickMuteReadDescTimer
         interval: 2000
         repeat: false
-        onTriggered: root.fullOverlayNeedsAttention = false
+        onTriggered: root.middleClickMuteReadDescFlash = false
     }
 
     Item {
         width: parent.width
-        height: Math.max(settingsTitle.implicitHeight, restoreDefaultsButton.implicitHeight)
+        height: Math.max(settingsTitle.implicitHeight, defaultsButtonsRow.implicitHeight)
 
         StyledText {
             id: settingsTitle
@@ -34,25 +37,54 @@ PluginSettings {
             color: Theme.surfaceText
         }
 
-        DankButton {
-            id: restoreDefaultsButton
+        Row {
+            id: defaultsButtonsRow
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            text: "Restore Defaults"
-            iconName: "restart_alt"
-            onClicked: {
-                fullOverlayToggle.value = true
-                volumeScrollToggle.value = true
-                middleClickMuteToggle.value = true
-                showMediaControlsToggle.value = true
-                textSeekbarToggle.value = false
-                seekbarVisualFeedbackToggle.value = false
-                widgetAreaScrollSeekToggle.value = false
-                widgetScrollSeekStepSetting.value = widgetScrollSeekStepSetting.defaultValue
-                rightClickMediaTabToggle.value = true
-                volumeScrollStepSetting.value = volumeScrollStepSetting.defaultValue
-                scrollVolumeSoundFeedbackToggle.value = false
-                showOsdAtLimitsToggle.value = true
+            spacing: Theme.spacingS
+
+            DankButton {
+                text: "Niri Defaults"
+                iconName: "restart_alt"
+                onClicked: {
+                    // Apply in dependency-safe order so resulting state is deterministic.
+                    fullOverlayToggle.value = false
+                    volumeScrollToggle.value = false
+                    widgetOnlyVolumeScrollToggle.value = true
+                    middleClickMuteToggle.value = true
+                    widgetMiddleClickNextSongToggle.value = false
+                    showMediaControlsToggle.value = true
+                    textSeekbarToggle.value = false
+                    seekbarVisualFeedbackToggle.value = true
+                    widgetAreaScrollSeekToggle.value = false
+                    widgetScrollSeekStepSetting.value = widgetScrollSeekStepSetting.defaultValue
+                    rightClickMediaTabToggle.value = true
+                    volumeScrollStepSetting.value = volumeScrollStepSetting.defaultValue
+                    scrollVolumeSoundFeedbackToggle.value = false
+                    showOsdAtLimitsToggle.value = true
+                }
+            }
+
+            DankButton {
+                text: "Hypr Defaults"
+                iconName: "restart_alt"
+                onClicked: {
+                    // Apply in dependency-safe order so resulting state is deterministic.
+                    fullOverlayToggle.value = true
+                    volumeScrollToggle.value = true
+                    widgetOnlyVolumeScrollToggle.value = false
+                    middleClickMuteToggle.value = true
+                    widgetMiddleClickNextSongToggle.value = false
+                    showMediaControlsToggle.value = true
+                    textSeekbarToggle.value = false
+                    seekbarVisualFeedbackToggle.value = true
+                    widgetAreaScrollSeekToggle.value = false
+                    widgetScrollSeekStepSetting.value = widgetScrollSeekStepSetting.defaultValue
+                    rightClickMediaTabToggle.value = true
+                    volumeScrollStepSetting.value = volumeScrollStepSetting.defaultValue
+                    scrollVolumeSoundFeedbackToggle.value = false
+                    showOsdAtLimitsToggle.value = true
+                }
             }
         }
     }
@@ -67,7 +99,7 @@ PluginSettings {
     ToggleSetting {
         id: fullOverlayToggle
         settingKey: "fullOverlay"
-        label: root.fullOverlayNeedsAttention ? "Full Bar Overlay (Required)" : "Full Bar Overlay"
+        label: "Full Bar Overlay"
         description: "Captures scroll and/or middle-clicks across the entire bar area to change volume and/or mute when enabled. It will disable any mouse scroll and middle-click events you may have on the bar such as workspace scroll."
         defaultValue: true
         onValueChanged: {
@@ -77,7 +109,7 @@ PluginSettings {
                 middleClickMuteToggle.value = true
             if (!value && volumeScrollToggle.value)
                 volumeScrollToggle.value = false
-            if (!value && middleClickMuteToggle.value)
+            if (!value && !widgetOnlyVolumeScrollToggle.value && middleClickMuteToggle.value)
                 middleClickMuteToggle.value = false
         }
     }
@@ -85,14 +117,36 @@ PluginSettings {
     ToggleSetting {
         id: volumeScrollToggle
         settingKey: "volumeScroll"
-        label: "Volume Scroll"
+        label: root.volumeScrollReadDescFlash ? "Volume Scroll (Requires Full Bar Overlay)" : "Volume Scroll"
         description: "Use mouse wheel to change volume on the bar. Requires Full Bar Overlay enabled."
         defaultValue: true
         onValueChanged: {
             if (value && !fullOverlayToggle.value) {
+                root.volumeScrollReadDescFlash = true
+                volumeScrollReadDescTimer.restart()
                 value = false
-                root.flashFullOverlayRequirement()
             }
+        }
+    }
+
+    ToggleSetting {
+        id: widgetOnlyVolumeScrollToggle
+        settingKey: "widgetOnlyVolumeScroll"
+        label: "Widget Volume Control"
+        description: "Use mouse wheel and middle-click on the entire Media Controls widget area to change volume and mute. Works without Full Bar Overlay."
+        defaultValue: false
+    }
+
+    ToggleSetting {
+        id: widgetMiddleClickNextSongToggle
+        settingKey: "widgetMiddleClickNextSong"
+        label: "Widget Middle Click Next Song"
+        description: "Use middle-click on widget area for next song."
+        defaultValue: false
+        enabled: showMediaControlsToggle.value
+        onValueChanged: {
+            if (value && middleClickMuteToggle.value)
+                middleClickMuteToggle.value = false
         }
     }
 
@@ -100,23 +154,27 @@ PluginSettings {
         id: volumeScrollStepSetting
         settingKey: "step"
         label: "Scroll Step"
-        description: "Volume change per scroll tick (default: 5)"
+        description: "Volume change per scroll tick for both Volume Scroll and Widget Volume Control (default: 5)"
         placeholder: "5"
         defaultValue: "5"
-        enabled: fullOverlayToggle.value && volumeScrollToggle.value
+        enabled: (fullOverlayToggle.value && volumeScrollToggle.value) || widgetOnlyVolumeScrollToggle.value
     }
 
     ToggleSetting {
         id: middleClickMuteToggle
         settingKey: "middleClickMute"
-        label: "Middle Click Mute"
-        description: "Middle-click the bar to mute audio. Requires Full Bar Overlay enabled."
+        label: root.middleClickMuteReadDescFlash ? "Middle Click Mute (Read Description)" : "Middle Click Mute"
+        description: "Middle-click to mute audio. Requires Full Bar Overlay or Widget Volume Control."
         defaultValue: true
         onValueChanged: {
-            if (value && !fullOverlayToggle.value) {
+            if (value && !fullOverlayToggle.value && !widgetOnlyVolumeScrollToggle.value) {
+                root.middleClickMuteReadDescFlash = true
+                middleClickMuteReadDescTimer.restart()
                 value = false
-                root.flashFullOverlayRequirement()
+                return
             }
+            if (value && widgetMiddleClickNextSongToggle.value)
+                widgetMiddleClickNextSongToggle.value = false
         }
     }
 

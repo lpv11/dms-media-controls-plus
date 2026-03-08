@@ -24,10 +24,12 @@ PluginComponent {
 
     property bool fullOverlay: pluginData.fullOverlay !== false
     property bool volumeScrollEnabled: fullOverlay && pluginData.volumeScroll !== false
+    property bool widgetOnlyVolumeScrollEnabled: showMediaControls && pluginData.widgetOnlyVolumeScroll === true
+    property bool widgetMiddleClickNextSongEnabled: showMediaControls && pluginData.widgetMiddleClickNextSong === true
     property bool hideWhenNoMusic: true
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: pluginData.showMediaControls !== false
-    property bool middleClickMuteEnabled: overlayEnabled && pluginData.middleClickMute !== false
+    property bool middleClickMuteEnabled: (overlayEnabled || widgetOnlyVolumeScrollEnabled) && pluginData.middleClickMute !== false
     property bool scrollVolumeSoundFeedbackEnabled: pluginData.scrollVolumeSoundFeedback === true
     property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled === true
     property bool seekbarVisualFeedbackEnabled: showMediaControls && pluginData.seekbarVisualFeedback === true
@@ -81,6 +83,32 @@ PluginComponent {
         if (!overlayEnabled || !volumeScrollEnabled || deltaY === 0)
             return false
         bump(deltaY)
+        return true
+    }
+
+    function canWidgetSeek(activePlayerObj) {
+        return widgetAreaScrollSeekEnabled && activePlayerObj && activePlayerObj.canSeek && activePlayerObj.length > 0
+    }
+
+    function handleWidgetWheel(activePlayerObj, deltaY) {
+        if (canWidgetSeek(activePlayerObj))
+            return seekByWheel(activePlayerObj, deltaY)
+        if (widgetOnlyVolumeScrollEnabled && deltaY !== 0) {
+            bump(deltaY)
+            return true
+        }
+        return false
+    }
+
+    function handleWidgetMiddleClick() {
+        if (middleClickMuteEnabled) {
+            toggleMute()
+            return true
+        }
+        if (widgetMiddleClickNextSongEnabled) {
+            nextTrack()
+            return true
+        }
         return true
     }
 
@@ -320,10 +348,10 @@ PluginComponent {
         if (button === Qt.LeftButton) {
             togglePlayPause();
         } else if (button === Qt.MiddleButton) {
-            if (overlayEnabled && middleClickMuteEnabled)
+            if (middleClickMuteEnabled)
                 toggleMute();
-            else
-                previousTrack();
+            else if (widgetMiddleClickNextSongEnabled)
+                nextTrack();
         } else if (button === Qt.RightButton) {
             if (showMediaControls && rightClickOpensMediaTab) {
                 const currentScreen = parentScreen || Screen;
@@ -494,7 +522,7 @@ PluginComponent {
             }
             readonly property int currentContentHeight: {
                 if (!root.isVertical) {
-                    return root.widgetThickness - horizontalPadding * 2;
+                    return root.widgetThickness;
                 }
                 const audioVizHeight = 20;
                 const playButtonHeight = 24;
@@ -519,11 +547,40 @@ PluginComponent {
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
-                    if (!(root.widgetAreaScrollSeekEnabled && playerAvailable && activePlayer && activePlayer.canSeek && activePlayer.length > 0)) {
-                        event.accepted = false;
-                        return;
+                    event.accepted = root.handleWidgetWheel(activePlayer, event.angleDelta.y)
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                z: 2000
+                enabled: root.widgetOnlyVolumeScrollEnabled
+                acceptedButtons: Qt.MiddleButton
+                hoverEnabled: false
+                preventStealing: false
+
+                onPressed: mouse => {
+                    if (mouse.button === Qt.MiddleButton) {
+                        if (root.middleClickMuteEnabled) {
+                            root.toggleMute()
+                        } else if (root.widgetMiddleClickNextSongEnabled) {
+                            root.nextTrack()
+                        }
+                        mouse.accepted = true
                     }
-                    event.accepted = root.seekByWheel(activePlayer, event.angleDelta.y)
+                }
+
+                onWheel: wheel => {
+                    if (root.canWidgetSeek(activePlayer)) {
+                        wheel.accepted = false
+                        return
+                    }
+                    if (wheel.angleDelta.y === 0) {
+                        wheel.accepted = false
+                        return
+                    }
+                    root.bump(wheel.angleDelta.y)
+                    wheel.accepted = true
                 }
             }
 
@@ -922,11 +979,7 @@ PluginComponent {
                             onCanceled: draggingSeek = false
 
                             onWheel: wheel => {
-                                if (!(root.widgetAreaScrollSeekEnabled && activePlayer && activePlayer.canSeek && activePlayer.length > 0)) {
-                                    wheel.accepted = false
-                                    return
-                                }
-                                wheel.accepted = root.seekByWheel(activePlayer, wheel.angleDelta.y)
+                                wheel.accepted = root.handleWidgetWheel(activePlayer, wheel.angleDelta.y)
                             }
 
                         }
@@ -1068,7 +1121,7 @@ PluginComponent {
                         wheel.accepted = false
                         return
                     }
-                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled && mediaLoader.item) {
+                    if (root.showMediaControls && (root.widgetAreaScrollSeekEnabled || root.widgetOnlyVolumeScrollEnabled) && mediaLoader.item) {
                         const p = mapToItem(mediaLoader, wheel.x, wheel.y)
                         if (p.x >= 0 && p.y >= 0 && p.x <= mediaLoader.width && p.y <= mediaLoader.height) {
                             wheel.accepted = false
@@ -1090,6 +1143,25 @@ PluginComponent {
                 visible: root.showMediaControls
             }
 
+            MouseArea {
+                anchors.fill: parent
+                anchors.margins: -6
+                z: 2100
+                enabled: !root.overlayEnabled && root.showMediaControls && (root.widgetOnlyVolumeScrollEnabled || root.middleClickMuteEnabled || root.widgetMiddleClickNextSongEnabled)
+                acceptedButtons: Qt.MiddleButton
+                preventStealing: true
+                hoverEnabled: false
+                onPressed: mouse => {
+                    if (mouse.button !== Qt.MiddleButton)
+                        return
+                    mouse.accepted = root.handleWidgetMiddleClick()
+                }
+                onWheel: wheel => {
+                    const player = mediaLoader.item ? mediaLoader.item.activePlayer : null
+                    wheel.accepted = root.handleWidgetWheel(player, wheel.angleDelta.y)
+                }
+            }
+
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
@@ -1097,7 +1169,7 @@ PluginComponent {
                         event.accepted = false
                         return
                     }
-                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled) {
+                    if (root.showMediaControls && (root.widgetAreaScrollSeekEnabled || root.widgetOnlyVolumeScrollEnabled)) {
                         event.accepted = false
                         return
                     }
@@ -1154,7 +1226,7 @@ PluginComponent {
                         wheel.accepted = false
                         return
                     }
-                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled && mediaLoader.item) {
+                    if (root.showMediaControls && (root.widgetAreaScrollSeekEnabled || root.widgetOnlyVolumeScrollEnabled) && mediaLoader.item) {
                         const p = mapToItem(mediaLoader, wheel.x, wheel.y)
                         if (p.x >= 0 && p.y >= 0 && p.x <= mediaLoader.width && p.y <= mediaLoader.height) {
                             wheel.accepted = false
@@ -1176,6 +1248,25 @@ PluginComponent {
                 visible: root.showMediaControls
             }
 
+            MouseArea {
+                anchors.fill: parent
+                anchors.margins: -6
+                z: 2100
+                enabled: !root.overlayEnabled && root.showMediaControls && (root.widgetOnlyVolumeScrollEnabled || root.middleClickMuteEnabled || root.widgetMiddleClickNextSongEnabled)
+                acceptedButtons: Qt.MiddleButton
+                preventStealing: true
+                hoverEnabled: false
+                onPressed: mouse => {
+                    if (mouse.button !== Qt.MiddleButton)
+                        return
+                    mouse.accepted = root.handleWidgetMiddleClick()
+                }
+                onWheel: wheel => {
+                    const player = mediaLoader.item ? mediaLoader.item.activePlayer : null
+                    wheel.accepted = root.handleWidgetWheel(player, wheel.angleDelta.y)
+                }
+            }
+
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
@@ -1183,7 +1274,7 @@ PluginComponent {
                         event.accepted = false
                         return
                     }
-                    if (root.showMediaControls && root.widgetAreaScrollSeekEnabled) {
+                    if (root.showMediaControls && (root.widgetAreaScrollSeekEnabled || root.widgetOnlyVolumeScrollEnabled)) {
                         event.accepted = false
                         return
                     }
