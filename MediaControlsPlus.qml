@@ -12,6 +12,19 @@ import qs.Services
 PluginComponent {
     id: root
 
+    function boolSetting(value, defaultValue) {
+        if (value === undefined || value === null)
+            return defaultValue
+        if (typeof value === "string") {
+            const v = value.toLowerCase().trim()
+            if (v === "true" || v === "1" || v === "yes" || v === "on")
+                return true
+            if (v === "false" || v === "0" || v === "no" || v === "off")
+                return false
+        }
+        return !!value
+    }
+
     property var popoutService: null
     property var parentScreen: null
     property bool isVertical: false
@@ -28,7 +41,8 @@ PluginComponent {
     property bool widgetMiddleClickNextSongEnabled: showMediaControls && pluginData.widgetMiddleClickNextSong === true
     property bool hideWhenNoMusic: true
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
-    property bool showMediaControls: pluginData.showMediaControls !== false
+    property bool showMediaControls: boolSetting(pluginData.showMediaControls, true)
+    property bool hasAnyPlayer: (MprisController.availablePlayers || []).length > 0
     property bool middleClickMuteEnabled: (overlayEnabled || widgetOnlyVolumeScrollEnabled) && pluginData.middleClickMute !== false
     property bool scrollVolumeSoundFeedbackEnabled: pluginData.scrollVolumeSoundFeedback === true
     property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled === true
@@ -39,7 +53,7 @@ PluginComponent {
         return Number.isFinite(n) && n > 0 ? Math.floor(n) : 10
     }
     property bool rightClickOpensMediaTab: showMediaControls && pluginData.rightClickOpensMediaTab !== false
-    property bool overlayEnabled: fullOverlay
+    property bool overlayEnabled: fullOverlay && hasAnyPlayer
     pillClickAction: showMediaControls ? (() => {
         togglePlayPause();
     }) : null
@@ -55,6 +69,9 @@ PluginComponent {
 
     onShowMediaControlsChanged: {
         if (!showMediaControls) {
+            pluginData.widgetOnlyVolumeScroll = false
+            pluginData.widgetMiddleClickNextSong = false
+            pluginData.seekbarVisualFeedback = false
             pluginData.textSeekbarEnabled = false
             pluginData.widgetAreaScrollSeek = false
             pluginData.rightClickOpensMediaTab = false
