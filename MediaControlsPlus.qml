@@ -42,7 +42,6 @@ PluginComponent {
     property bool hideWhenNoMusic: true
     property bool showOsdAtLimits: pluginData.showOsdAtLimits !== false
     property bool showMediaControls: boolSetting(pluginData.showMediaControls, true)
-    property bool hasAnyPlayer: (MprisController.availablePlayers || []).length > 0
     property bool middleClickMuteEnabled: (overlayEnabled || widgetOnlyVolumeScrollEnabled) && pluginData.middleClickMute !== false
     property bool scrollVolumeSoundFeedbackEnabled: pluginData.scrollVolumeSoundFeedback === true
     property bool textSeekbarEnabled: showMediaControls && pluginData.textSeekbarEnabled === true
@@ -53,7 +52,7 @@ PluginComponent {
         return Number.isFinite(n) && n > 0 ? Math.floor(n) : 10
     }
     property bool rightClickOpensMediaTab: showMediaControls && pluginData.rightClickOpensMediaTab !== false
-    property bool overlayEnabled: fullOverlay && hasAnyPlayer
+    property bool overlayEnabled: fullOverlay
     pillClickAction: showMediaControls ? (() => {
         togglePlayPause();
     }) : null
@@ -93,8 +92,10 @@ PluginComponent {
     Component.onCompleted: applyForcedNoBackground()
     onBarConfigChanged: applyForcedNoBackground()
 
-    visibilityCommand: hideWhenNoMusic ? "/usr/bin/playerctl -a status 2>/dev/null | grep -Eq '^(Playing|Paused)$'" : ""
-    visibilityInterval: hideWhenNoMusic ? 2 : 0
+    // Keep plugin instance alive when full overlay is enabled, so volume/mute
+    // capture keeps working even if there is no active MPRIS player.
+    visibilityCommand: (hideWhenNoMusic && !fullOverlay) ? "/usr/bin/playerctl -a status 2>/dev/null | grep -Eq '^(Playing|Paused)$'" : ""
+    visibilityInterval: (hideWhenNoMusic && !fullOverlay) ? 2 : 0
 
     function handleTopEdgeWheel(deltaY) {
         if (!overlayEnabled || !volumeScrollEnabled || deltaY === 0)
